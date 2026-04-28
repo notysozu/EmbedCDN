@@ -14,11 +14,11 @@ const axios = require("axios");
 
 const bodyParser = require("body-parser");
 
+const { get, put } = require("@vercel/blob");
+
 // Read settings file
 
-const config = fs.readFileSync("./settings.json");
-
-const settings = JSON.parse(config);
+const settings = require("./settings.json");
 
 // Get the app name, port, link and favicon from settings
 
@@ -26,13 +26,15 @@ const appName = settings.app.appName;
 
 const appFavicon = settings.app.appFavicon;
 
-const appPort = settings.app.appPort;
+const appPort = Number(process.env.APP_PORT || settings.app.appPort);
 
-const appLink = settings.app.appLink;
+const appLink = process.env.APP_LINK || settings.app.appLink;
 
-const apiToken = settings.api.apiToken;
+const appBaseUrl = appPort === 80 || appPort === 443 ? appLink : `${appLink}:${appPort}`;
 
-const webhookUrl = settings.app.webhookURL;
+const apiToken = process.env.API_TOKEN || settings.api.apiToken;
+
+const webhookUrl = process.env.WEBHOOK_URL || settings.app.webhookURL;
 
 const discordInvite = settings.social.discord;
 
@@ -43,6 +45,124 @@ const facebookInvite = settings.social.facebook;
 const instagramInvite = settings.social.instagram;
 
 const linkedinInvite = settings.social.linkedin;
+
+const isBlobStorageEnabled = () => Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+
+function generateString(length) {
+
+  const characters =
+
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
+  let result = "";
+
+  const charactersLength = characters.length;
+
+  for (let i = 0; i < length; i++) {
+
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+
+  }
+
+  return result;
+
+}
+
+function getFirstUploadedFile(req) {
+
+  const uploadedFile = req.files && req.files.myFile;
+
+  return Array.isArray(uploadedFile) ? uploadedFile[0] : uploadedFile;
+
+}
+
+function formatFileSize(size) {
+
+  let filesize = Math.round(size / 1e6) + " Megabytes";
+
+  if (filesize === "0 Megabytes") {
+
+    filesize = Math.round(size / 1000) + " Kilobytes";
+
+  }
+
+  return filesize;
+
+}
+
+function buildStoredFileName(originalName) {
+
+  const extension = path.extname(originalName || "").slice(1) || "bin";
+
+  return generateString(20) + "." + extension;
+
+}
+
+function blobPathFor(fileName) {
+
+  return "uploads/" + fileName;
+
+}
+
+function moveUploadedFile(uploadedFile, targetPath) {
+
+  return new Promise((resolve, reject) => {
+
+    uploadedFile.mv(targetPath, (error) => {
+
+      error ? reject(error) : resolve();
+
+    });
+
+  });
+
+}
+
+async function saveUploadedFile(uploadedFile, storedFileName) {
+
+  if (isBlobStorageEnabled()) {
+
+    const blob = await put(blobPathFor(storedFileName), uploadedFile.data, {
+
+      access: "public",
+
+      contentType: uploadedFile.mimetype,
+
+      allowOverwrite: false,
+
+    });
+
+    return blob.url;
+
+  }
+
+  await moveUploadedFile(
+
+    uploadedFile,
+
+    path.join(__dirname, "public", "uploads", storedFileName)
+
+  );
+
+  return `${appBaseUrl}/uploads/${storedFileName}`;
+
+}
+
+async function getStoredFileUrl(fileName) {
+
+  if (isBlobStorageEnabled()) {
+
+    const blob = await get(blobPathFor(fileName), { access: "public" });
+
+    return blob && blob.blob && blob.blob.url;
+
+  }
+
+  const localPath = path.join(__dirname, "public", "uploads", fileName);
+
+  return fs.existsSync(localPath) ? `${appBaseUrl}/uploads/${fileName}` : null;
+
+}
 
 app.use(cors());
 
@@ -174,9 +294,11 @@ app.get("/upload", (req, res) => {
 
 });
 
-app.post("/upload", (req, res) => {
+app.post("/upload", async (req, res) => {
 
-  if (!req.files) {
+  const uploadedFile = getFirstUploadedFile(req);
+
+  if (!uploadedFile) {
 
     res.status(404);
 
@@ -186,63 +308,17 @@ app.post("/upload", (req, res) => {
 
   }
 
-  function generateString(length) {
+  try {
 
-    const characters =
+    const storedFileName = buildStoredFileName(uploadedFile.name);
 
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    const uploadLink = await saveUploadedFile(uploadedFile, storedFileName);
 
-    let result = "";
+    const fileLink = `${appBaseUrl}/files/${storedFileName}`;
 
-    const charactersLength = characters.length;
-
-    for (let i = 0; i < length; i++) {
-
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-
-    }
-
-    return result;
-
-  }
-
-  let fileName = req.files.myFile.name;
-
-  let splitter = fileName.split(".");
-
-  let extension = splitter[splitter.length - 1];
-
-  let DecidedFileName = generateString(20);
-
-  req.files.myFile.mv(
-
-    "./public/uploads/" + DecidedFileName + "." + extension,
-
-    (error) => {
-
-      if (error) console.log(error);
-
-    }
-
-  );
-
-  let filesize = Math.round(req.files.myFile.size / 1e6) + " Megabytes";
-
-  if (filesize === "0 Megabytes") {
-
-    filesize = Math.round(req.files.myFile.size / 1000) + " Kilobytes";
-
-  } else {
+    const filesize = formatFileSize(uploadedFile.size);
 
     res.status(200);
-
-  }
-
-  if (appPort === 80 || appPort === 443) {
-
-    let fileLink = appLink + "/files/" + DecidedFileName + "." + extension;
-
-    let uploadLink = appLink + "/uploads/" + DecidedFileName + "." + extension;
 
     res.render("views/success.ejs", {
 
@@ -252,7 +328,7 @@ app.post("/upload", (req, res) => {
 
       fileSize: filesize,
 
-      fileName: DecidedFileName + "." + extension,
+      fileName: storedFileName,
 
       appFavicon: appFavicon,
 
@@ -292,69 +368,25 @@ app.post("/upload", (req, res) => {
 
       ],
 
-    };
+  };
 
-    axios.post(webhookUrl, data);
+    axios.post(webhookUrl, data).catch((error) => console.log(error));
 
-  } else {
+  } catch (error) {
 
-    let fileLink =
+    console.log(error);
 
-      appLink + ":" + appPort + "/files/" + DecidedFileName + "." + extension;
-
-    let uploadLink =
-
-      appLink + ":" + appPort + "/uploads/" + DecidedFileName + "." + extension;
-
-    res.render("views/success.ejs", {
-
-      fileLink: fileLink,
-
-      fileSize: filesize,
-
-      fileName: DecidedFileName + "." + extension,
-
-      appFavicon: appFavicon,
-
-      appName: appName,
-
-      discordInvite: discordInvite,
-
-    });
-
-    const data = {
-
-      embeds: [
-
-        {
-
-          title: "User Uploaded an file (/upload)",
-
-          color: 0xff0000,
-
-          description: "User IP - " + "||" + req.ip + "|| \n File Link - " + fileLink,
-
-          image: {
-
-            url: uploadLink,
-
-          },
-
-        },
-
-      ],
-
-    };
-
-    axios.post(webhookUrl, data);
+    res.status(500).send("Error uploading file");
 
   }
 
 });
 
-app.post("/api/upload", cors(), authenticate, (req, res) => {
+app.post("/api/upload", cors(), authenticate, async (req, res) => {
 
-  if (!req.files) {
+  const uploadedFile = getFirstUploadedFile(req);
+
+  if (!uploadedFile) {
 
     res.status(404);
 
@@ -364,59 +396,17 @@ app.post("/api/upload", cors(), authenticate, (req, res) => {
 
   }
 
-  function generateString(length) {
+  try {
 
-    const characters =
+    const storedFileName = buildStoredFileName(uploadedFile.name);
 
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    const uploadLink = await saveUploadedFile(uploadedFile, storedFileName);
 
-    let result = "";
+    const fileLink = `${appBaseUrl}/files/${storedFileName}`;
 
-    const charactersLength = characters.length;
+    const filesize = formatFileSize(uploadedFile.size);
 
-    for (let i = 0; i < length; i++) {
-
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-
-    }
-
-    return result;
-
-  }
-
-  let fileName = req.files.myFile.name;
-
-  let splitter = fileName.split(".");
-
-  let extension = splitter[splitter.length - 1];
-
-  let DecidedFileName = generateString(20);
-
-  req.files.myFile.mv(
-
-    "./public/uploads/" + DecidedFileName + "." + extension,
-
-    (error) => {
-
-      if (error) console.log(error);
-
-    }
-
-  );
-
-  let filesize = Math.round(req.files.myFile.size / 1e6) + " Megabytes";
-
-  filesize === "0 Megabytes"
-
-    ? (filesize = Math.round(req.files.myFile.size / 1000) + " Kilobytes")
-
-    : res.status(200);
-
-  if (appPort === 80) {
-
-    let fileLink = appLink + "/files/" + DecidedFileName + "." + extension;
-
-    res.json({
+    res.status(200).json({
 
       data: {
 
@@ -424,61 +414,63 @@ app.post("/api/upload", cors(), authenticate, (req, res) => {
 
         fileSize: filesize,
 
-        fileName: DecidedFileName + "." + extension,
+        fileName: storedFileName,
+
+        uploadLink: uploadLink,
 
       },
 
     });
 
-  } else if (appPort === 443) {
+  } catch (error) {
 
-    let fileLink = appLink + "/files/" + DecidedFileName + "." + extension;
+    console.log(error);
 
-    res.json({
-
-      data: {
-
-        fileLink: fileLink,
-
-        fileSize: filesize,
-
-        fileName: DecidedFileName + "." + extension,
-
-      },
-
-    });
-
-  } else {
-
-    let fileLink =
-
-      appLink + ":" + appPort + "/files/" + DecidedFileName + "." + extension;
-
-    res.json({
-
-      data: {
-
-        fileLink: fileLink,
-
-        fileSize: filesize,
-
-        fileName: DecidedFileName + "." + extension,
-
-      },
-
-    });
+    res.status(500).json({ ERROR: "Error uploading file" });
 
   }
 
 });
 
-app.get("/files/*", (req, res) => {
+app.get("/uploads/*", async (req, res, next) => {
 
-  let fileToGet = req.path.slice(7);
+  if (!isBlobStorageEnabled()) {
+
+    return next();
+
+  }
+
+  const fileToGet = decodeURIComponent(req.path.slice(9));
 
   try {
 
-    if (fs.existsSync(`./public/uploads/${fileToGet}`)) {
+    const imageDirectLink = await getStoredFileUrl(fileToGet);
+
+    if (!imageDirectLink) {
+
+      return next();
+
+    }
+
+    res.redirect(302, imageDirectLink);
+
+  } catch (error) {
+
+    next(error);
+
+  }
+
+});
+
+app.get("/files/*", async (req, res) => {
+
+  let fileToGet = decodeURIComponent(req.path.slice(7));
+
+  try {
+
+    const imageDirectLink = await getStoredFileUrl(fileToGet);
+
+    if (imageDirectLink) {
 
       function getRandomNumberBetween(min, max) {
 
@@ -494,7 +486,7 @@ app.get("/files/*", (req, res) => {
 
       res.render("views/display", {
 
-        imageDirectLink: `${appLink}:${appPort}/uploads/${fileToGet}`,
+        imageDirectLink: imageDirectLink,
 
         app_link: appLink,
 
@@ -530,12 +522,18 @@ app.use((req, res) => {
 
 });
 
-app.listen(appPort, (err) => {
+if (require.main === module) {
+  const listenPort = process.env.PORT || appPort;
 
-  err
+  app.listen(listenPort, (err) => {
 
-    ? console.log(err)
+    err
 
-    : console.log("Webserver Started on appPort: " + appPort);
+      ? console.log(err)
 
-});
+      : console.log("Webserver Started on appPort: " + listenPort);
+
+  });
+}
+
+module.exports = app;
