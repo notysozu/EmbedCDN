@@ -23,6 +23,7 @@
   const revealItems = document.querySelectorAll(".reveal");
   const resultData = document.querySelector("[data-upload-result]");
   const RECENT_KEY = "embedcdn:recent-uploads";
+  const DOCS_LAST_SHORT_KEY = "embedcdn:docs-last-short-link";
 
   let activeObjectUrl = "";
 
@@ -126,6 +127,24 @@
       showToast("Copy failed", "error");
       return false;
     }
+  };
+
+  const copyValueFromTarget = function (selector) {
+    if (!selector) {
+      return "";
+    }
+
+    const target = document.querySelector(selector);
+
+    if (!target) {
+      return "";
+    }
+
+    if (typeof target.value === "string") {
+      return target.value;
+    }
+
+    return target.textContent || "";
   };
 
   const getRecentUploads = function () {
@@ -401,177 +420,6 @@
     }
   };
 
-  const commandItems = [
-    {
-      id: "upload",
-      icon: "bi-cloud-arrow-up",
-      label: "Upload file",
-      hint: "Open the file picker",
-      run: function () {
-        if (fileInput) {
-          fileInput.click();
-        } else {
-          window.location.href = "/#upload";
-        }
-      },
-    },
-    {
-      id: "copy-latest",
-      icon: "bi-copy",
-      label: "Copy latest link",
-      hint: "Copy the newest short link",
-      run: function () {
-        copyText(latestLink(), "Copied latest link");
-      },
-    },
-    {
-      id: "recent",
-      icon: "bi-clock-history",
-      label: "Open recent uploads",
-      hint: "Show the last five uploads",
-      run: openRecentPanel,
-    },
-    {
-      id: "api",
-      icon: "bi-terminal",
-      label: "Go to API docs",
-      hint: "Jump to the API section",
-      run: function () {
-        const apiSection = document.querySelector("#api");
-        if (apiSection) {
-          apiSection.scrollIntoView({ behavior: "smooth", block: "start" });
-        } else {
-          window.location.href = "/#api";
-        }
-      },
-    },
-    {
-      id: "slug",
-      icon: "bi-fingerprint",
-      label: "Focus custom slug",
-      hint: "Edit the short link name",
-      run: function () {
-        if (slugInput) {
-          slugInput.focus();
-        } else {
-          window.location.href = "/#slug-control";
-        }
-      },
-    },
-  ];
-
-  const createCommandPalette = function () {
-    let overlay = document.querySelector("[data-command-overlay]");
-
-    if (overlay) {
-      return overlay;
-    }
-
-    overlay = document.createElement("div");
-    overlay.className = "command-overlay";
-    overlay.setAttribute("data-command-overlay", "");
-    overlay.innerHTML =
-      '<section class="command-dialog" role="dialog" aria-modal="true" aria-label="Command palette">' +
-      '<input class="command-search" type="search" placeholder="Type a command..." aria-label="Search commands" data-command-search>' +
-      '<div class="command-list" role="listbox" data-command-list></div>' +
-      "</section>";
-    document.body.appendChild(overlay);
-
-    const search = overlay.querySelector("[data-command-search]");
-    const list = overlay.querySelector("[data-command-list]");
-    let activeIndex = 0;
-
-    const paint = function () {
-      const query = search.value.trim().toLowerCase();
-      const filtered = commandItems.filter(function (item) {
-        return (
-          item.label.toLowerCase().indexOf(query) !== -1 ||
-          item.hint.toLowerCase().indexOf(query) !== -1
-        );
-      });
-
-      activeIndex = Math.min(activeIndex, Math.max(filtered.length - 1, 0));
-      list.innerHTML = "";
-
-      filtered.forEach(function (item, index) {
-        const button = document.createElement("button");
-        button.className = "command-item" + (index === activeIndex ? " is-active" : "");
-        button.type = "button";
-        button.setAttribute("role", "option");
-        button.innerHTML =
-          '<i class="bi ' +
-          item.icon +
-          '" aria-hidden="true"></i><span><strong></strong><small></small></span>';
-        button.querySelector("strong").textContent = item.label;
-        button.querySelector("small").textContent = item.hint;
-        button.addEventListener("mouseenter", function () {
-          activeIndex = index;
-          paint();
-        });
-        button.addEventListener("click", function () {
-          closeCommandPalette();
-          item.run();
-        });
-        list.appendChild(button);
-      });
-    };
-
-    search.addEventListener("input", function () {
-      activeIndex = 0;
-      paint();
-    });
-
-    overlay.addEventListener("click", function (event) {
-      if (event.target === overlay) {
-        closeCommandPalette();
-      }
-    });
-
-    overlay.addEventListener("keydown", function (event) {
-      const options = list.querySelectorAll(".command-item");
-
-      if (event.key === "Escape") {
-        closeCommandPalette();
-      }
-
-      if (event.key === "ArrowDown") {
-        event.preventDefault();
-        activeIndex = Math.min(activeIndex + 1, Math.max(options.length - 1, 0));
-        paint();
-      }
-
-      if (event.key === "ArrowUp") {
-        event.preventDefault();
-        activeIndex = Math.max(activeIndex - 1, 0);
-        paint();
-      }
-
-      if (event.key === "Enter" && options[activeIndex]) {
-        event.preventDefault();
-        options[activeIndex].click();
-      }
-    });
-
-    overlay.paint = paint;
-    return overlay;
-  };
-
-  const openCommandPalette = function () {
-    const overlay = createCommandPalette();
-    overlay.classList.add("is-open");
-    overlay.paint();
-    const search = overlay.querySelector("[data-command-search]");
-    search.value = "";
-    search.focus();
-  };
-
-  const closeCommandPalette = function () {
-    const overlay = document.querySelector("[data-command-overlay]");
-    if (overlay) {
-      overlay.classList.remove("is-open");
-    }
-  };
-
   if (navToggle && navPanel) {
     navToggle.addEventListener("click", function () {
       const isOpen = body.classList.toggle("nav-open");
@@ -671,6 +519,23 @@
     });
   });
 
+  document.querySelectorAll("[data-copy-source]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      const sourceId = button.getAttribute("data-copy-source");
+      const source = sourceId ? document.getElementById(sourceId) : null;
+      copyText(source ? source.textContent : "", "Copied code sample");
+    });
+  });
+
+  document.querySelectorAll("[data-copy-target]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      copyText(
+        copyValueFromTarget(button.getAttribute("data-copy-target")),
+        button.getAttribute("data-copy-label") || "Copied value"
+      );
+    });
+  });
+
   document.querySelectorAll("[data-preview-tabs]").forEach(function (tabs) {
     tabs.addEventListener("click", function (event) {
       const button = event.target.closest("[data-preview-tab]");
@@ -695,6 +560,31 @@
     });
   });
 
+  document.querySelectorAll("[data-doc-lang-tabs]").forEach(function (tabs) {
+    tabs.addEventListener("click", function (event) {
+      const button = event.target.closest("[data-doc-lang]");
+
+      if (!button) {
+        return;
+      }
+
+      const target = button.getAttribute("data-doc-lang");
+      const group = tabs.parentElement;
+
+      tabs.querySelectorAll("[data-doc-lang]").forEach(function (tab) {
+        const active = tab === button;
+        tab.classList.toggle("is-active", active);
+        tab.setAttribute("aria-selected", String(active));
+      });
+
+      group.querySelectorAll("[data-doc-lang-panel]").forEach(function (panel) {
+        const active = panel.getAttribute("data-doc-lang-panel") === target;
+        panel.hidden = !active;
+        panel.classList.toggle("is-active", active);
+      });
+    });
+  });
+
   document.querySelectorAll("[data-open-recent]").forEach(function (button) {
     button.addEventListener("click", openRecentPanel);
   });
@@ -705,18 +595,217 @@
     });
   });
 
-  document.querySelectorAll("[data-command-trigger]").forEach(function (button) {
-    button.addEventListener("click", openCommandPalette);
+  document.querySelectorAll("[data-api-tester]").forEach(function (form) {
+    const endpoint = form.getAttribute("data-endpoint") || "/api/upload";
+    const tokenInput = form.querySelector("[data-api-token-input]");
+    const fileInputEl = form.querySelector("[data-api-file-input]");
+    const submit = form.querySelector("[data-api-test-button]");
+    const submitLabel = form.querySelector("[data-api-test-label]");
+    const resultRoot = document.querySelector("[data-api-result]");
+    const statusEl = document.querySelector("[data-api-result-status]");
+    const jsonEl = document.querySelector("[data-api-result-json]");
+    const linksEl = document.querySelector("[data-api-result-links]");
+    const fileLinkEl = document.querySelector("[data-api-result-file-link]");
+    const shortLinkEl = document.querySelector("[data-api-result-short-link]");
+
+    const setStatus = function (text, state) {
+      if (!statusEl) {
+        return;
+      }
+
+      statusEl.textContent = text;
+      statusEl.className = "result-pill" + (state ? " is-" + state : "");
+    };
+
+    const setJson = function (value) {
+      if (jsonEl) {
+        jsonEl.textContent = JSON.stringify(value, null, 2);
+      }
+    };
+
+    const setLinks = function (payload) {
+      const data = payload && payload.data ? payload.data : {};
+      const fileLink = data.fileLink || "";
+      const shortLink = data.shortLink || "";
+
+      if (fileLinkEl) {
+        fileLinkEl.value = fileLink;
+      }
+
+      if (shortLinkEl) {
+        shortLinkEl.value = shortLink;
+      }
+
+      if (linksEl) {
+        linksEl.classList.toggle("is-hidden", !fileLink && !shortLink);
+      }
+
+      if (shortLink) {
+        localStorage.setItem(DOCS_LAST_SHORT_KEY, shortLink);
+      }
+    };
+
+    try {
+      const lastShortLink = localStorage.getItem(DOCS_LAST_SHORT_KEY);
+      if (lastShortLink && shortLinkEl) {
+        shortLinkEl.value = lastShortLink;
+      }
+    } catch {}
+
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      const token = tokenInput ? tokenInput.value.trim() : "";
+      const file = fileInputEl && fileInputEl.files ? fileInputEl.files[0] : null;
+
+      if (!token) {
+        setStatus("Missing token", "error");
+        setJson({ error: "Add your API token before testing." });
+        showToast("API token required", "error");
+        return;
+      }
+
+      if (!file) {
+        setStatus("Missing file", "error");
+        setJson({ error: "Choose a file before testing the upload endpoint." });
+        showToast("File required", "error");
+        return;
+      }
+
+      const formData = new FormData(form);
+
+      if (submit) {
+        submit.disabled = true;
+      }
+
+      if (submitLabel) {
+        submitLabel.textContent = "Uploading...";
+      }
+
+      setStatus("Uploading...", "loading");
+
+      try {
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "x-api-token": token,
+          },
+          body: formData,
+        });
+
+        const payload = await response.json().catch(function () {
+          return { error: "The server returned a non-JSON response." };
+        });
+
+        setJson(payload);
+
+        if (!response.ok) {
+          setStatus("Upload failed", "error");
+          if (linksEl) {
+            linksEl.classList.add("is-hidden");
+          }
+          showToast("API upload failed", "error");
+          return;
+        }
+
+        setLinks(payload);
+        setStatus("Upload passed", "success");
+        showToast("API upload succeeded");
+
+        if (resultRoot) {
+          resultRoot.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+      } catch (error) {
+        setStatus("Network error", "error");
+        setJson({ error: error && error.message ? error.message : "Request failed." });
+        if (linksEl) {
+          linksEl.classList.add("is-hidden");
+        }
+        showToast("API request failed", "error");
+      } finally {
+        if (submit) {
+          submit.disabled = false;
+        }
+
+        if (submitLabel) {
+          submitLabel.textContent = "Test Upload";
+        }
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-api-health-check]").forEach(function (button) {
+    const endpoint = button.getAttribute("data-endpoint") || "/api/health";
+    const statusEl = document.querySelector("[data-api-health-status]");
+    const latencyEl = document.querySelector("[data-api-health-latency]");
+    const timeEl = document.querySelector("[data-api-health-time]");
+    const jsonEl = document.querySelector("[data-api-health-json]");
+
+    button.addEventListener("click", async function () {
+      button.disabled = true;
+      if (statusEl) {
+        statusEl.textContent = "Checking...";
+      }
+
+      const startedAt = window.performance && window.performance.now
+        ? window.performance.now()
+        : Date.now();
+
+      try {
+        const response = await fetch(endpoint, { method: "GET" });
+        const payload = await response.json();
+        const endedAt = window.performance && window.performance.now
+          ? window.performance.now()
+          : Date.now();
+        const duration = Math.max(1, Math.round(endedAt - startedAt));
+
+        if (jsonEl) {
+          jsonEl.textContent = JSON.stringify(payload, null, 2);
+        }
+
+        if (statusEl) {
+          statusEl.textContent = response.ok && payload.ok ? "Online" : "Issue detected";
+        }
+
+        if (latencyEl) {
+          latencyEl.textContent = duration + " ms";
+        }
+
+        if (timeEl) {
+          timeEl.textContent = payload.time || "No timestamp returned";
+        }
+
+        showToast(response.ok ? "API is online" : "Health check returned an error", response.ok ? "" : "error");
+      } catch (error) {
+        if (statusEl) {
+          statusEl.textContent = "Offline";
+        }
+
+        if (latencyEl) {
+          latencyEl.textContent = "Request failed";
+        }
+
+        if (timeEl) {
+          timeEl.textContent = "No response";
+        }
+
+        if (jsonEl) {
+          jsonEl.textContent = JSON.stringify(
+            { error: error && error.message ? error.message : "Health check failed." },
+            null,
+            2
+          );
+        }
+
+        showToast("API health check failed", "error");
+      } finally {
+        button.disabled = false;
+      }
+    });
   });
 
   document.addEventListener("keydown", function (event) {
-    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-      event.preventDefault();
-      openCommandPalette();
-    }
-
     if (event.key === "Escape") {
-      closeCommandPalette();
       const recent = document.querySelector("[data-recent-overlay]");
       if (recent) {
         recent.classList.remove("is-open");

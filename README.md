@@ -35,9 +35,9 @@
     <br />
     <a href="https://cdn.nicoruiz.dev">View Demo</a>
     ·
-    <a href="https://github.com/NicoRuizDev/EmbedCDN/issues">Report Bug</a>
+    <a href="https://github.com/notysozu/EmbedCDN/issues">Report Bug</a>
     ·
-    <a href="https://github.com/NicoRuizDev/EmbedCDN/issues">Request Feature</a>
+    <a href="https://github.com/notysozu/EmbedCDN/issues">Request Feature</a>
   </p>
 </div>
 
@@ -99,9 +99,9 @@ If you have a suggestion that would make this better, please fork the repo and c
 Don't forget to give the project a star! Thanks again!
 
 1. Fork the Project
-2. Create your Feature Branch (`git checkout -b NicoRuizDev/EmbedCDN`)
+2. Create your Feature Branch (`git checkout -b notysozu/EmbedCDN`)
 3. Commit your Changes (`git commit -m 'Add some EmbedCDN'`)
-4. Push to the Branch (`git push origin NicoRuizDev/EmbedCDN`)
+4. Push to the Branch (`git push origin notysozu/EmbedCDN`)
 5. Open a Pull Request
 
 <p align="right">(<a href="#top">back to top</a>)</p>
@@ -120,7 +120,7 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Project Link: [https://github.com/NicoRuizDev/EmbedCDN](https://github.com/NicoRuizDev/EmbedCDN)
+Project Link: [https://github.com/notysozu/EmbedCDN](https://github.com/notysozu/EmbedCDN)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
@@ -139,14 +139,14 @@ Project Link: [https://github.com/NicoRuizDev/EmbedCDN](https://github.com/NicoR
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/NicoRuizDev/EmbedCDN.svg?style=for-the-badge
-[contributors-url]: https://github.com/NicoRuizDev/EmbedCDN/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/NicoRuizDev/EmbedCDN.svg?style=for-the-badge
-[forks-url]: https://github.com/NicoRuizDev/EmbedCDN/network/members
-[stars-shield]: https://img.shields.io/github/stars/NicoRuizDev/EmbedCDN.svg?style=for-the-badge
-[stars-url]: https://github.com/NicoRuizDev/EmbedCDN/stargazers
-[issues-shield]: https://img.shields.io/github/issues/NicoRuizDev/EmbedCDN.svg?style=for-the-badge
-[issues-url]: https://github.com/NicoRuizDev/EmbedCDN/issues
-[license-shield]: https://img.shields.io/github/license/NicoRuizDev/EmbedCDN.svg?style=for-the-badge
-[license-url]: https://github.com/NicoRuizDev/EmbedCDN/blob/master/LICENSE.txt
+[contributors-shield]: https://img.shields.io/github/contributors/notysozu/EmbedCDN.svg?style=for-the-badge
+[contributors-url]: https://github.com/notysozu/EmbedCDN/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/notysozu/EmbedCDN.svg?style=for-the-badge
+[forks-url]: https://github.com/notysozu/EmbedCDN/network/members
+[stars-shield]: https://img.shields.io/github/stars/notysozu/EmbedCDN.svg?style=for-the-badge
+[stars-url]: https://github.com/notysozu/EmbedCDN/stargazers
+[issues-shield]: https://img.shields.io/github/issues/notysozu/EmbedCDN.svg?style=for-the-badge
+[issues-url]: https://github.com/notysozu/EmbedCDN/issues
+[license-shield]: https://img.shields.io/github/license/notysozu/EmbedCDN.svg?style=for-the-badge
+[license-url]: https://github.com/notysozu/EmbedCDN/blob/master/LICENSE.txt
 [product-screenshot]: images/screenshot.png

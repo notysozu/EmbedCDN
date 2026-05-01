@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <% const safeAppName = typeof appName !== "undefined" && appName ? appName : "EmbedCDN"; %>
+  <% const safeBaseUrl = typeof appBaseUrl !== "undefined" && appBaseUrl ? appBaseUrl : ""; %>
+  <% const safeGithub = typeof githubInvite !== "undefined" && githubInvite ? githubInvite : "https://github.com/notysozu/EmbedCDN"; %>
+  <% const safeUploadEndpoint = typeof docsUploadEndpoint !== "undefined" && docsUploadEndpoint ? docsUploadEndpoint : `${safeBaseUrl}/api/upload`; %>
+  <% const safeHealthEndpoint = typeof docsHealthEndpoint !== "undefined" && docsHealthEndpoint ? docsHealthEndpoint : `${safeBaseUrl}/api/health`; %>
+  <% const safeFileField = typeof docsFileField !== "undefined" && docsFileField ? docsFileField : "myFile"; %>
+  <% const safeAuthHeader = typeof docsAuthHeader !== "undefined" && docsAuthHeader ? docsAuthHeader : "x-api-token"; %>
+  <% const safeSampleToken = typeof docsSampleToken !== "undefined" && docsSampleToken ? docsSampleToken : "YOUR_API_TOKEN"; %>
+  <% const safeSampleSlug = typeof docsSampleSlug !== "undefined" && docsSampleSlug ? docsSampleSlug : "launch-assets"; %>
+  <% const safeResponseExample = typeof docsResponseExample !== "undefined" && docsResponseExample ? docsResponseExample : { data: { fileLink: `${safeBaseUrl}/files/abc123.png`, shortLink: `${safeBaseUrl}/s/demo`, shortCode: "demo", fileSize: "248 KB", fileName: "abc123.png", uploadLink: `${safeBaseUrl}/uploads/abc123.png`, title: "Launch poster", description: "Tiny link. Big preview." } }; %>
+  <% const responseJson = JSON.stringify(safeResponseExample, null, 2); %>
+  <% const curlExample = `curl -X POST "${safeUploadEndpoint}" \\\n+  -H "${safeAuthHeader}: ${safeSampleToken}" \\\n+  -F "${safeFileField}=@./image.png" \\\n+  -F "customSlug=${safeSampleSlug}" \\\n+  -F "title=Launch poster" \\\n+  -F "description=Tiny link. Big preview."`; %>
+  <% const fetchExample = `const formData = new FormData();\n+formData.append("${safeFileField}", fileInput.files[0]);\n+formData.append("customSlug", "${safeSampleSlug}");\n+formData.append("title", "Launch poster");\n+formData.append("description", "Tiny link. Big preview.");\n+\n+const response = await fetch("${safeUploadEndpoint}", {\n+  method: "POST",\n+  headers: {\n+    "${safeAuthHeader}": "${safeSampleToken}"\n+  },\n+  body: formData\n+});\n+\n+const payload = await response.json();\n+console.log(payload);\n+console.log(payload.data?.shortLink || payload.data?.fileLink);`; %>
+  <% const nodeExample = `import fs from "node:fs";\n+import path from "node:path";\n+\n+const form = new FormData();\n+const filePath = path.resolve("./image.png");\n+form.append("${safeFileField}", new Blob([fs.readFileSync(filePath)]), "image.png");\n+form.append("customSlug", "${safeSampleSlug}");\n+form.append("title", "Launch poster");\n+form.append("description", "Tiny link. Big preview.");\n+\n+const response = await fetch("${safeUploadEndpoint}", {\n+  method: "POST",\n+  headers: {\n+    "${safeAuthHeader}": process.env.API_TOKEN\n+  },\n+  body: form\n+});\n+\n+const payload = await response.json();\n+console.log(payload.data.fileLink);\n+console.log(payload.data.shortLink);`; %>
+  <% const pythonExample = `import requests\n+\n+url = "${safeUploadEndpoint}"\n+headers = {\n+    "${safeAuthHeader}": "${safeSampleToken}"\n+}\n+files = {\n+    "${safeFileField}": open("./image.png", "rb")\n+}\n+data = {\n+    "customSlug": "${safeSampleSlug}",\n+    "title": "Launch poster",\n+    "description": "Tiny link. Big preview."\n+}\n+\n+response = requests.post(url, headers=headers, files=files, data=data, timeout=30)\n+payload = response.json()\n+\n+print(payload)\n+print(payload["data"]["shortLink"])`; %>
+  <% const phpExample = `$ch = curl_init("${safeUploadEndpoint}");\n+\n+$postFields = [\n+  "${safeFileField}" => new CURLFile(__DIR__ . "/image.png"),\n+  "customSlug" => "${safeSampleSlug}",\n+  "title" => "Launch poster",\n+  "description" => "Tiny link. Big preview."\n+];\n+\n+curl_setopt_array($ch, [\n+  CURLOPT_POST => true,\n+  CURLOPT_HTTPHEADER => ["${safeAuthHeader}: ${safeSampleToken}"],\n+  CURLOPT_POSTFIELDS => $postFields,\n+  CURLOPT_RETURNTRANSFER => true,\n+]);\n+\n+$response = curl_exec($ch);\n+$payload = json_decode($response, true);\n+curl_close($ch);\n+\n+print_r($payload);\n+echo $payload["data"]["fileLink"] . PHP_EOL;`; %>
+  <% const javaExample = `var client = java.net.http.HttpClient.newHttpClient();\n+var boundary = "----UnfurlXBoundary";\n+var filePath = java.nio.file.Path.of("image.png");\n+var fileBytes = java.nio.file.Files.readAllBytes(filePath);\n+\n+var body = new java.io.ByteArrayOutputStream();\n+body.write(("--" + boundary + "\\r\\n").getBytes());\n+body.write(("Content-Disposition: form-data; name=\\"customSlug\\"\\r\\n\\r\\n${safeSampleSlug}\\r\\n").getBytes());\n+body.write(("--" + boundary + "\\r\\n").getBytes());\n+body.write(("Content-Disposition: form-data; name=\\"title\\"\\r\\n\\r\\nLaunch poster\\r\\n").getBytes());\n+body.write(("--" + boundary + "\\r\\n").getBytes());\n+body.write(("Content-Disposition: form-data; name=\\"description\\"\\r\\n\\r\\nTiny link. Big preview.\\r\\n").getBytes());\n+body.write(("--" + boundary + "\\r\\n").getBytes());\n+body.write(("Content-Disposition: form-data; name=\\"${safeFileField}\\"; filename=\\"image.png\\"\\r\\n").getBytes());\n+body.write(("Content-Type: image/png\\r\\n\\r\\n").getBytes());\n+body.write(fileBytes);\n+body.write(("\\r\\n--" + boundary + "--\\r\\n").getBytes());\n+\n+var request = java.net.http.HttpRequest.newBuilder()\n+  .uri(java.net.URI.create("${safeUploadEndpoint}"))\n+  .header("${safeAuthHeader}", "${safeSampleToken}")\n+  .header("Content-Type", "multipart/form-data; boundary=" + boundary)\n+  .POST(java.net.http.HttpRequest.BodyPublishers.ofByteArray(body.toByteArray()))\n+  .build();\n+\n+var response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());\n+System.out.println(response.body());`; %>
+  <% const goExample = `package main\n+\n+import (\n+  "bytes"\n+  "fmt"\n+  "io"\n+  "mime/multipart"\n+  "net/http"\n+  "os"\n+)\n+\n+func main() {\n+  file, _ := os.Open("./image.png")\n+  defer file.Close()\n+\n+  var body bytes.Buffer\n+  writer := multipart.NewWriter(&body)\n+\n+  part, _ := writer.CreateFormFile("${safeFileField}", "image.png")\n+  io.Copy(part, file)\n+  writer.WriteField("customSlug", "${safeSampleSlug}")\n+  writer.WriteField("title", "Launch poster")\n+  writer.WriteField("description", "Tiny link. Big preview.")\n+  writer.Close()\n+\n+  req, _ := http.NewRequest("POST", "${safeUploadEndpoint}", &body)\n+  req.Header.Set("${safeAuthHeader}", "${safeSampleToken}")\n+  req.Header.Set("Content-Type", writer.FormDataContentType())\n+\n+  resp, _ := http.DefaultClient.Do(req)\n+  defer resp.Body.Close()\n+\n+  payload, _ := io.ReadAll(resp.Body)\n+  fmt.Println(string(payload))\n+}`; %>
+  <% const discordExample = `import { Client, GatewayIntentBits, AttachmentBuilder } from "discord.js";\n+import fs from "node:fs";\n+\n+const client = new Client({ intents: [GatewayIntentBits.Guilds] });\n+\n+client.once("ready", () => {\n+  console.log("Bot ready");\n+});\n+\n+client.on("interactionCreate", async (interaction) => {\n+  if (!interaction.isChatInputCommand() || interaction.commandName !== "upload") {\n+    return;\n+  }\n+\n+  const form = new FormData();\n+  form.append("${safeFileField}", new Blob([fs.readFileSync("./image.png")]), "image.png");\n+  form.append("customSlug", "${safeSampleSlug}");\n+\n+  const response = await fetch("${safeUploadEndpoint}", {\n+    method: "POST",\n+    headers: {\n+      "${safeAuthHeader}": process.env.API_TOKEN\n+    },\n+    body: form\n+  });\n+\n+  const payload = await response.json();\n+  await interaction.reply({\n+    content: payload.data.shortLink + "\\n" + payload.data.fileLink\n+  });\n+});\n+\n+client.login(process.env.DISCORD_TOKEN);`; %>
+
+  <title><%= safeAppName %> | API Docs</title>
+  <meta name="description" content="Programmatic upload docs, health checks, and a live API tester for <%= safeAppName %>.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="/assets/css/style.css" rel="stylesheet">
+</head>
+
+<body class="product-shell docs-page" data-page="api-docs">
+  <div class="texture-layer" aria-hidden="true"></div>
+
+  <header class="site-header" id="top">
+    <div class="container nav-shell">
+      <a class="brand-mark" href="/" aria-label="<%= safeAppName %> home">
+        <span class="brand-copy">
+          <strong><%= safeAppName %></strong>
+          <small>API Docs</small>
+        </span>
+      </a>
+
+      <button class="nav-toggle icon-button" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Toggle navigation" data-nav-toggle>
+        <i class="bi bi-list" aria-hidden="true"></i>
+      </button>
+
+      <nav class="site-nav" id="site-nav" data-nav-panel aria-label="Primary navigation">
+        <a href="/">Home</a>
+        <a href="/#upload">Upload</a>
+        <a href="/api-docs">API Docs</a>
+        <a href="<%= safeGithub %>" target="_blank" rel="noreferrer">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="docs-main">
+    <section class="docs-hero">
+      <div class="container docs-hero-grid">
+        <div class="reveal">
+          <span class="eyebrow">Developer-ready</span>
+          <h1>Upload from bots, tools, dashboards, and scripts without losing the pretty links.</h1>
+          <p class="hero-text">The <%= safeAppName %> API turns file uploads into Discord and social-friendly file routes, compact short links, and metadata-rich previews that are easy to automate.</p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#try-api">
+              <i class="bi bi-lightning-charge" aria-hidden="true"></i>
+              <span>Try the API</span>
+            </a>
+            <a class="button button-secondary" href="#examples">
+              <i class="bi bi-code-slash" aria-hidden="true"></i>
+              <span>See code examples</span>
+            </a>
+          </div>
+        </div>
+
+        <aside class="docs-hero-card reveal">
+          <div class="docs-stat-grid">
+            <div class="docs-stat">
+              <strong>Auth</strong>
+              <span><%= safeAuthHeader %></span>
+            </div>
+            <div class="docs-stat">
+              <strong>Upload</strong>
+              <span><%= safeUploadEndpoint %></span>
+            </div>
+            <div class="docs-stat">
+              <strong>Health</strong>
+              <span><%= safeHealthEndpoint %></span>
+            </div>
+            <div class="docs-stat">
+              <strong>File field</strong>
+              <span><%= safeFileField %></span>
+            </div>
+          </div>
+          <div class="notice-card is-info">
+            <i class="bi bi-info-circle" aria-hidden="true"></i>
+            <div>
+              <strong>Quick mental model</strong>
+              <p>Use `fileLink` when you need the rich preview route. Use `shortLink` when you want the cleanest shareable URL.</p>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="docs-shell container">
+      <aside class="docs-sidebar reveal">
+        <div class="docs-sidebar-card">
+          <strong>On this page</strong>
+          <nav class="docs-toc" aria-label="API docs table of contents">
+            <a href="#overview">Overview</a>
+            <a href="#authentication">Authentication</a>
+            <a href="#upload-endpoint">Upload Endpoint</a>
+            <a href="#examples">Code Examples</a>
+            <a href="#try-api">Test Your API</a>
+            <a href="#api-status">API Status</a>
+            <a href="#errors">Common Errors</a>
+            <a href="#notes">Developer Notes</a>
+          </nav>
+        </div>
+      </aside>
+
+      <div class="docs-content">
+        <section class="docs-section reveal" id="overview">
+          <div class="section-heading">
+            <span class="eyebrow">Overview</span>
+            <h2>What this API does</h2>
+            <p>Programmatically upload files, mint short links, and return preview-friendly routes that work nicely with Discord, internal dashboards, moderation tools, CI jobs, and bot workflows.</p>
+          </div>
+          <div class="docs-grid">
+            <article class="feature-card">
+              <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+              <h3>Automated uploads</h3>
+              <p>Send multipart uploads from a server, bot, job runner, or admin tool.</p>
+            </article>
+            <article class="feature-card">
+              <i class="bi bi-discord" aria-hidden="true"></i>
+              <h3>Embed-friendly links</h3>
+              <p>Get a `fileLink` route that is designed for rich unfurl and preview behavior.</p>
+            </article>
+            <article class="feature-card">
+              <i class="bi bi-link-45deg" aria-hidden="true"></i>
+              <h3>Short links included</h3>
+              <p>Every upload can produce a cleaner `shortLink` for captions, messages, and handoffs.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="docs-section reveal" id="authentication">
+          <div class="section-heading">
+            <span class="eyebrow">Authentication</span>
+            <h2>Token-based auth, sent in a header</h2>
+            <p>The API expects your token in the request header below. Keep it on the server side only.</p>
+          </div>
+          <div class="docs-card">
+            <div class="docs-inline-code"><code><%= safeAuthHeader %>: <%= safeSampleToken %></code></div>
+            <div class="notice-list">
+              <div class="notice-card is-warning">
+                <i class="bi bi-shield-lock" aria-hidden="true"></i>
+                <div>
+                  <strong>Never expose this token in public frontend code</strong>
+                  <p>Use it from your backend, bot, CLI, cron job, or internal admin tooling.</p>
+                </div>
+              </div>
+              <div class="notice-card is-info">
+                <i class="bi bi-terminal" aria-hidden="true"></i>
+                <div>
+                  <strong>Browser tester is for trusted app owners</strong>
+                  <p>The tester on this page is useful inside your own app, but production integrations should still call the API from your server or bot.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="docs-section reveal" id="upload-endpoint">
+          <div class="section-heading">
+            <span class="eyebrow">Upload Endpoint</span>
+            <h2><code>POST /api/upload</code></h2>
+            <p>Send a `multipart/form-data` request with your file and optional metadata. The current backend expects the uploaded file field to be named `<code><%= safeFileField %></code>`.</p>
+          </div>
+          <div class="docs-card docs-request-card">
+            <div class="endpoint-pill"><span>POST</span> <code>/api/upload</code></div>
+            <div class="docs-params-grid">
+              <div>
+                <strong>Content type</strong>
+                <p><code>multipart/form-data</code></p>
+              </div>
+              <div>
+                <strong>Required file field</strong>
+                <p><code><%= safeFileField %></code></p>
+              </div>
+              <div>
+                <strong>Optional fields</strong>
+                <p><code>customSlug</code>, <code>title</code>, <code>description</code></p>
+              </div>
+              <div>
+                <strong>Auth header</strong>
+                <p><code><%= safeAuthHeader %></code></p>
+              </div>
+            </div>
+          </div>
+
+          <div class="docs-two-col">
+            <article class="docs-card">
+              <strong>Request fields</strong>
+              <ul class="docs-list">
+                <li><code><%= safeFileField %></code>: the file to upload</li>
+                <li><code>customSlug</code>: optional branded short code, 3-40 chars</li>
+                <li><code>title</code>: optional embed title</li>
+                <li><code>description</code>: optional embed description</li>
+              </ul>
+            </article>
+
+            <article class="docs-card">
+              <div class="code-block-head">
+                <strong>Response example</strong>
+                <button class="button button-quiet code-copy-button" type="button" data-copy-source="response-example">
+                  <i class="bi bi-copy" aria-hidden="true"></i>
+                  <span>Copy</span>
+                </button>
+              </div>
+              <pre class="docs-code-block"><code id="response-example"><%= responseJson %></code></pre>
+            </article>
+          </div>
+        </section>
+
+        <section class="docs-section reveal" id="examples">
+          <div class="section-heading">
+            <span class="eyebrow">Examples</span>
+            <h2>Copy-pasteable examples in the languages people actually use</h2>
+            <p>Each sample uploads a file, sends the token header, and reads back the returned `fileLink` or `shortLink`.</p>
+          </div>
+
+          <div class="docs-card">
+            <div class="doc-lang-tabs" role="tablist" aria-label="API example language tabs" data-doc-lang-tabs>
+              <button class="is-active" type="button" role="tab" aria-selected="true" data-doc-lang="curl">cURL</button>
+              <button type="button" role="tab" aria-selected="false" data-doc-lang="javascript">JavaScript</button>
+              <button type="button" role="tab" aria-selected="false" data-doc-lang="node">Node.js</button>
+              <button type="button" role="tab" aria-selected="false" data-doc-lang="python">Python</button>
+              <button type="button" role="tab" aria-selected="false" data-doc-lang="php">PHP</button>
+              <button type="button" role="tab" aria-selected="false" data-doc-lang="java">Java</button>
+              <button type="button" role="tab" aria-selected="false" data-doc-lang="go">Go</button>
+              <button type="button" role="tab" aria-selected="false" data-doc-lang="discord">Discord.js</button>
+            </div>
+
+            <div class="doc-lang-panel is-active" role="tabpanel" data-doc-lang-panel="curl">
+              <div class="code-block-head">
+                <strong>cURL upload</strong>
+                <button class="button button-quiet code-copy-button" type="button" data-copy-source="lang-curl">
+                  <i class="bi bi-copy" aria-hidden="true"></i>
+                  <span>Copy</span>
+                </button>
+              </div>
+              <pre class="docs-code-block"><code id="lang-curl"><%= curlExample %></code></pre>
+            </div>
+
+            <div class="doc-lang-panel" role="tabpanel" data-doc-lang-panel="javascript" hidden>
+              <div class="code-block-head">
+                <strong>Browser fetch</strong>
+                <button class="button button-quiet code-copy-button" type="button" data-copy-source="lang-javascript">
+                  <i class="bi bi-copy" aria-hidden="true"></i>
+                  <span>Copy</span>
+                </button>
+              </div>
+              <pre class="docs-code-block"><code id="lang-javascript"><%= fetchExample %></code></pre>
+            </div>
+
+            <div class="doc-lang-panel" role="tabpanel" data-doc-lang-panel="node" hidden>
+              <div class="code-block-head">
+                <strong>Node.js FormData</strong>
+                <button class="button button-quiet code-copy-button" type="button" data-copy-source="lang-node">
+                  <i class="bi bi-copy" aria-hidden="true"></i>
+                  <span>Copy</span>
+                </button>
+              </div>
+              <pre class="docs-code-block"><code id="lang-node"><%= nodeExample %></code></pre>
+            </div>
+
+            <div class="doc-lang-panel" role="tabpanel" data-doc-lang-panel="python" hidden>
+              <div class="code-block-head">
+                <strong>Python requests</strong>
+                <button class="button button-quiet code-copy-button" type="button" data-copy-source="lang-python">
+                  <i class="bi bi-copy" aria-hidden="true"></i>
+                  <span>Copy</span>
+                </button>
+              </div>
+              <pre class="docs-code-block"><code id="lang-python"><%= pythonExample %></code></pre>
+            </div>
+
+            <div class="doc-lang-panel" role="tabpanel" data-doc-lang-panel="php" hidden>
+              <div class="code-block-head">
+                <strong>PHP cURL</strong>
+                <button class="button button-quiet code-copy-button" type="button" data-copy-source="lang-php">
+                  <i class="bi bi-copy" aria-hidden="true"></i>
+                  <span>Copy</span>
+                </button>
+              </div>
+              <pre class="docs-code-block"><code id="lang-php"><%= phpExample %></code></pre>
+            </div>
+
+            <div class="doc-lang-panel" role="tabpanel" data-doc-lang-panel="java" hidden>
+              <div class="code-block-head">
+                <strong>Java HttpClient</strong>
+                <button class="button button-quiet code-copy-button" type="button" data-copy-source="lang-java">
+                  <i class="bi bi-copy" aria-hidden="true"></i>
+                  <span>Copy</span>
+                </button>
+              </div>
+              <pre class="docs-code-block"><code id="lang-java"><%= javaExample %></code></pre>
+            </div>
+
+            <div class="doc-lang-panel" role="tabpanel" data-doc-lang-panel="go" hidden>
+              <div class="code-block-head">
+                <strong>Go multipart upload</strong>
+                <button class="button button-quiet code-copy-button" type="button" data-copy-source="lang-go">
+                  <i class="bi bi-copy" aria-hidden="true"></i>
+                  <span>Copy</span>
+                </button>
+              </div>
+              <pre class="docs-code-block"><code id="lang-go"><%= goExample %></code></pre>
+            </div>
+
+            <div class="doc-lang-panel" role="tabpanel" data-doc-lang-panel="discord" hidden>
+              <div class="code-block-head">
+                <strong>Discord.js bot</strong>
+                <button class="button button-quiet code-copy-button" type="button" data-copy-source="lang-discord">
+                  <i class="bi bi-copy" aria-hidden="true"></i>
+                  <span>Copy</span>
+                </button>
+              </div>
+              <pre class="docs-code-block"><code id="lang-discord"><%= discordExample %></code></pre>
+            </div>
+          </div>
+        </section>
+
+        <section class="docs-section reveal" id="try-api">
+          <div class="section-heading">
+            <span class="eyebrow">Test Your API</span>
+            <h2>Check your token and upload flow right from the docs</h2>
+            <p>Useful for quick setup verification. The token is used only for this request and is not stored permanently by the page.</p>
+          </div>
+
+          <div class="notice-card is-warning">
+            <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+            <div>
+              <strong>Production note</strong>
+              <p>For production, call this API from your server or bot, not public frontend code.</p>
+            </div>
+          </div>
+
+          <div class="docs-card">
+            <form class="docs-form" data-api-tester data-endpoint="<%= safeUploadEndpoint %>">
+              <label class="field">
+                <span>API Token</span>
+                <input type="password" name="apiToken" autocomplete="off" placeholder="Paste your API token" data-api-token-input required>
+              </label>
+
+              <label class="field">
+                <span>File</span>
+                <input type="file" name="<%= safeFileField %>" data-api-file-input required>
+              </label>
+
+              <label class="field">
+                <span>Optional custom slug</span>
+                <input type="text" name="customSlug" maxlength="40" placeholder="<%= safeSampleSlug %>" data-api-slug-input>
+              </label>
+
+              <div class="form-grid">
+                <label class="field">
+                  <span>Optional title</span>
+                  <input type="text" name="title" maxlength="90" placeholder="Launch poster">
+                </label>
+                <label class="field">
+                  <span>Optional description</span>
+                  <input type="text" name="description" maxlength="180" placeholder="Tiny link. Big preview.">
+                </label>
+              </div>
+
+              <div class="docs-action-row">
+                <button class="button button-primary" type="submit" data-api-test-button>
+                  <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+                  <span data-api-test-label>Test Upload</span>
+                </button>
+              </div>
+            </form>
+
+            <div class="docs-result-card" data-api-result>
+              <div class="docs-result-head">
+                <strong>Result preview</strong>
+                <span class="result-pill is-idle" data-api-result-status>Waiting for a test upload</span>
+              </div>
+              <div class="docs-result-links is-hidden" data-api-result-links>
+                <div class="copy-block">
+                  <label>File link</label>
+                  <div class="copy-field">
+                    <input type="text" value="" readonly data-api-result-file-link>
+                    <button class="icon-button copy-icon" type="button" data-copy-target="[data-api-result-file-link]" data-copy-label="Copied file link">
+                      <i class="bi bi-copy" aria-hidden="true"></i>
+                      <span class="sr-only">Copy file link</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="copy-block">
+                  <label>Short link</label>
+                  <div class="copy-field">
+                    <input type="text" value="" readonly data-api-result-short-link>
+                    <button class="icon-button copy-icon" type="button" data-copy-target="[data-api-result-short-link]" data-copy-label="Copied short link">
+                      <i class="bi bi-copy" aria-hidden="true"></i>
+                      <span class="sr-only">Copy short link</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <pre class="docs-code-block docs-result-json"><code data-api-result-json>{
+  "message": "Upload a file with your token to see the live response here."
+}</code></pre>
+            </div>
+          </div>
+        </section>
+
+        <section class="docs-section reveal" id="api-status">
+          <div class="section-heading">
+            <span class="eyebrow">API Status</span>
+            <h2>Quick health check for uptime and response time</h2>
+            <p>The button below calls `<code>/api/health</code>` and reports the server timestamp and request duration.</p>
+          </div>
+          <div class="docs-card docs-status-card">
+            <div class="docs-action-row">
+              <button class="button button-secondary" type="button" data-api-health-check data-endpoint="<%= safeHealthEndpoint %>">
+                <i class="bi bi-activity" aria-hidden="true"></i>
+                <span>Check API Status</span>
+              </button>
+            </div>
+            <div class="docs-status-grid">
+              <div class="docs-status-item">
+                <strong>Status</strong>
+                <span data-api-health-status>Idle</span>
+              </div>
+              <div class="docs-status-item">
+                <strong>Response time</strong>
+                <span data-api-health-latency>Not checked yet</span>
+              </div>
+              <div class="docs-status-item">
+                <strong>Server time</strong>
+                <span data-api-health-time>Waiting for a request</span>
+              </div>
+            </div>
+            <pre class="docs-code-block docs-result-json"><code data-api-health-json>{
+  "ok": true,
+  "service": "<%= safeAppName %> API",
+  "time": "ISO_DATE"
+}</code></pre>
+          </div>
+        </section>
+
+        <section class="docs-section reveal" id="errors">
+          <div class="section-heading">
+            <span class="eyebrow">Common Errors</span>
+            <h2>What went wrong, and how to fix it fast</h2>
+          </div>
+          <div class="docs-errors-grid">
+            <article class="docs-card">
+              <strong>401 Invalid API token</strong>
+              <p>Meaning: the token header is missing or does not match the configured API token.</p>
+              <p>Fix: send the correct value in `<code><%= safeAuthHeader %></code>` and make sure the server has `API_TOKEN` configured.</p>
+            </article>
+            <article class="docs-card">
+              <strong>400 No file uploaded</strong>
+              <p>Meaning: the request did not include a file in `<code><%= safeFileField %></code>` or the payload shape was wrong.</p>
+              <p>Fix: send `multipart/form-data` and make sure the file field name exactly matches `<code><%= safeFileField %></code>`.</p>
+            </article>
+            <article class="docs-card">
+              <strong>409 Custom slug already exists</strong>
+              <p>Meaning: the requested `customSlug` is already taken.</p>
+              <p>Fix: choose a different slug or leave it blank and let the server mint one automatically.</p>
+            </article>
+            <article class="docs-card">
+              <strong>413 File too large</strong>
+              <p>Meaning: the upload exceeded the server or platform file size limit.</p>
+              <p>Fix: reduce the asset size or adjust your deployment upload limit if your hosting setup supports it.</p>
+            </article>
+            <article class="docs-card">
+              <strong>500 Server error</strong>
+              <p>Meaning: storage, filesystem, or server-side upload handling failed.</p>
+              <p>Fix: check server logs, storage credentials, and write permissions, then retry the request.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="docs-section reveal" id="notes">
+          <div class="section-heading">
+            <span class="eyebrow">Developer Notes</span>
+            <h2>Small habits that save time later</h2>
+          </div>
+          <div class="docs-card">
+            <ul class="docs-list">
+              <li>Use <code>shortLink</code> for clean sharing in chat messages, dashboards, and captions.</li>
+              <li>Use <code>fileLink</code> when Discord embed preview behavior is required.</li>
+              <li>Use <code>customSlug</code> for branded, memorable links when the name is available.</li>
+              <li>Rotate your API token immediately if it is leaked or committed anywhere public.</li>
+              <li>Keep webhook URLs and API tokens in environment variables, not hardcoded into app code.</li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid footer-grid-docs">
+      <div>
+        <a class="brand-mark" href="/">
+          <span class="brand-copy">
+            <strong><%= safeAppName %></strong>
+            <small>Build once. Integrate everywhere.</small>
+          </span>
+        </a>
+      </div>
+
+      <nav class="site-nav footer-doc-links" aria-label="Footer links">
+        <a href="/">Home</a>
+        <a href="/api-docs">API Docs</a>
+        <a href="<%= safeGithub %>" target="_blank" rel="noreferrer">GitHub</a>
+      </nav>
+
+      <div class="social-row" aria-label="Social links">
+        <a href="<%= safeGithub %>" aria-label="GitHub" target="_blank" rel="noreferrer"><i class="bi bi-github"></i></a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/assets/js/main.js"></script>
+</body>
+
+</html>

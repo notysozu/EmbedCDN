@@ -29,6 +29,8 @@ const twitterInvite = settings.social.twitter;
 const facebookInvite = settings.social.facebook;
 const instagramInvite = settings.social.instagram;
 const linkedinInvite = settings.social.linkedin;
+const githubInvite =
+  settings.social.github || "https://github.com/notysozu/EmbedCDN";
 
 const SHORT_LINKS_FILE = path.join(__dirname, "data", "short-links.json");
 const SHORT_LINKS_BLOB_PATH = "data/short-links.json";
@@ -549,6 +551,7 @@ function buildSharedViewData(req, extra = {}) {
     facebookInvite,
     instagramInvite,
     linkedinInvite,
+    githubInvite,
     ...extra,
   };
 }
@@ -665,6 +668,32 @@ app.post("/subscribe", (req, res) => {
 
 app.get("/upload", (req, res) => {
   res.redirect("/#upload");
+});
+
+app.get("/api-docs", (req, res) => {
+  res.status(200).render(
+    "views/api_docs",
+    buildSharedViewData(req, {
+      docsUploadEndpoint: `${getBaseUrl(req)}/api/upload`,
+      docsHealthEndpoint: `${getBaseUrl(req)}/api/health`,
+      docsFileField: "myFile",
+      docsAuthHeader: "x-api-token",
+      docsSampleToken: "YOUR_API_TOKEN",
+      docsSampleSlug: "launch-assets",
+      docsResponseExample: {
+        data: {
+          fileLink: `${getBaseUrl(req)}/files/abc123.png`,
+          shortLink: `${getBaseUrl(req)}/s/demo`,
+          shortCode: "demo",
+          fileSize: "248 KB",
+          fileName: "abc123.png",
+          uploadLink: `${getBaseUrl(req)}/uploads/abc123.png`,
+          title: "Launch poster",
+          description: "Tiny link. Big preview.",
+        },
+      },
+    })
+  );
 });
 
 app.post("/upload", async (req, res) => {
@@ -838,6 +867,14 @@ app.post("/api/shorten", cors(), authenticate, async (req, res) => {
     console.error(error);
     res.status(500).json({ ERROR: "Error creating short link" });
   }
+});
+
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    ok: true,
+    service: `${appName} API`,
+    time: new Date().toISOString(),
+  });
 });
 
 app.get("/s/:code", async (req, res) => {

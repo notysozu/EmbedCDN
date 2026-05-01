@@ -6,11 +6,7 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
   <% const safeAppName = typeof appName !== "undefined" && appName ? appName : "EmbedCDN"; %>
   <% const safeBaseUrl = typeof appBaseUrl !== "undefined" && appBaseUrl ? appBaseUrl : ""; %>
-  <% const safeDiscord = typeof discordInvite !== "undefined" && discordInvite ? discordInvite : "#"; %>
-  <% const safeTwitter = typeof twitterInvite !== "undefined" && twitterInvite ? twitterInvite : "#"; %>
-  <% const safeFacebook = typeof facebookInvite !== "undefined" && facebookInvite ? facebookInvite : "#"; %>
-  <% const safeInstagram = typeof instagramInvite !== "undefined" && instagramInvite ? instagramInvite : "#"; %>
-  <% const safeLinkedin = typeof linkedinInvite !== "undefined" && linkedinInvite ? linkedinInvite : "#"; %>
+  <% const safeGithub = typeof githubInvite !== "undefined" && githubInvite ? githubInvite : "https://github.com/notysozu/EmbedCDN"; %>
   <% const safeUploadError = typeof uploadError !== "undefined" && uploadError ? uploadError : ""; %>
   <% const safeForm = typeof formValues !== "undefined" && formValues ? formValues : {}; %>
   <% const safeSlug = safeForm.customSlug ? String(safeForm.customSlug) : ""; %>
@@ -46,14 +42,9 @@
       <nav class="site-nav" id="site-nav" data-nav-panel aria-label="Primary navigation">
         <a href="#upload">Upload</a>
         <a href="#features">Features</a>
-        <a href="#api">API</a>
-        <a href="<%= safeDiscord %>" target="_blank" rel="noreferrer">Discord</a>
+        <a href="/api-docs">API Docs</a>
+        <a href="<%= safeGithub %>" target="_blank" rel="noreferrer">GitHub</a>
       </nav>
-
-      <button class="button button-quiet command-button" type="button" data-command-trigger>
-        <i class="bi bi-command" aria-hidden="true"></i>
-        <span>Command</span>
-      </button>
     </div>
   </header>
 
@@ -98,7 +89,7 @@
                 <div class="embed-image-sample" data-preview-image aria-label="Preview artwork"></div>
                 <div class="embed-link-lines">
                   <code data-preview-file-link><%= safeBaseUrl || "https://yourdomain.com" %>/files/demo.png</code>
-                  <code data-preview-short-link><%= safeBaseUrl || "https://yourdomain.com" %>/s/hackathon-demo</code>
+                  <code data-preview-short-link><%= safeBaseUrl || "https://yourdomain.com" %>/s/launch-assets</code>
                 </div>
               </div>
             </div>
@@ -161,7 +152,7 @@
             </span>
             <div class="slug-input-wrap">
               <span><%= safeBaseUrl || "yourdomain.com" %>/s/</span>
-              <input id="customSlug" type="text" name="customSlug" value="<%= safeSlug %>" maxlength="40" inputmode="url" autocomplete="off" placeholder="hackathon-demo" data-slug-input>
+              <input id="customSlug" type="text" name="customSlug" value="<%= safeSlug %>" maxlength="40" inputmode="url" autocomplete="off" placeholder="launch-assets" data-slug-input>
             </div>
             <small class="field-help" data-slug-help>Use lowercase letters, numbers, and hyphens. Max 40 characters.</small>
           </label>
@@ -238,7 +229,7 @@
     <section class="feature-section" id="features">
       <div class="container">
         <div class="section-heading reveal">
-          <span class="eyebrow">Built like a real utility</span>
+          <span class="eyebrow">Core features</span>
           <h2>Small surface area. High confidence links.</h2>
         </div>
 
@@ -256,7 +247,7 @@
           <article class="feature-card reveal" data-tooltip="Custom slug: claim a memorable short URL when the name is available.">
             <i class="bi bi-fingerprint" aria-hidden="true"></i>
             <h3>Custom Slugs</h3>
-            <p>Use names like hackathon-demo or patch-notes-7.</p>
+            <p>Use names like launch-assets or patch-notes-7.</p>
           </article>
           <article class="feature-card reveal">
             <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>
@@ -307,20 +298,13 @@ multipart: myFile, customSlug, title, description
         </a>
       </div>
 
-      <form action="/subscribe" method="post" class="newsletter-form">
-        <label class="sr-only" for="email">Email address</label>
-        <input id="email" type="email" name="email" placeholder="release-notes@example.com" required>
-        <button class="button button-secondary" type="submit">
-          <i class="bi bi-send" aria-hidden="true"></i>
-          <span>Subscribe</span>
-        </button>
-      </form>
+      <nav class="site-nav footer-doc-links" aria-label="Footer links">
+        <a href="/">Home</a>
+        <a href="/api-docs">API Docs</a>
+      </nav>
 
       <div class="social-row" aria-label="Social links">
-        <a href="<%= safeTwitter %>" aria-label="Twitter" target="_blank" rel="noreferrer"><i class="bi bi-twitter-x"></i></a>
-        <a href="<%= safeFacebook %>" aria-label="Facebook" target="_blank" rel="noreferrer"><i class="bi bi-facebook"></i></a>
-        <a href="<%= safeInstagram %>" aria-label="Instagram" target="_blank" rel="noreferrer"><i class="bi bi-instagram"></i></a>
-        <a href="<%= safeLinkedin %>" aria-label="LinkedIn" target="_blank" rel="noreferrer"><i class="bi bi-linkedin"></i></a>
+        <a href="<%= safeGithub %>" aria-label="GitHub" target="_blank" rel="noreferrer"><i class="bi bi-github"></i></a>
       </div>
     </div>
   </footer>
