@@ -5,36 +5,45 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>404 | Not Found</title>
+  <% const safeAppName = typeof appName !== "undefined" && appName ? appName : "EmbedCDN"; %>
+  <% const safeStatus = typeof errorStatus !== "undefined" && errorStatus ? errorStatus : 404; %>
+  <% const safeEyebrow = typeof errorEyebrow !== "undefined" && errorEyebrow ? errorEyebrow : "404 Error"; %>
+  <% const safeTitle = typeof errorTitle !== "undefined" && errorTitle ? errorTitle : "That link is off the map."; %>
+  <% const safeMessage = typeof errorMessage !== "undefined" && errorMessage ? errorMessage : "The file, route, or short link could not be found."; %>
+  <title><%= safeStatus %> | <%= safeAppName %></title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link href="/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
   <link href="/assets/css/style.css" rel="stylesheet">
 </head>
 
-<body class="theme-dark">
-  <div class="site-shell site-shell-compact">
-    <div class="bg-orb bg-orb-one" aria-hidden="true"></div>
-    <div class="bg-orb bg-orb-two" aria-hidden="true"></div>
-    <div class="bg-grid" aria-hidden="true"></div>
+<body class="product-shell error-page" data-page="error">
+  <div class="texture-layer" aria-hidden="true"></div>
 
-    <main class="page-main page-center">
-      <section class="section error-section">
-        <div class="container">
-          <div class="glass-panel error-card reveal">
-            <span class="eyebrow">404 Error</span>
-            <h1>That page doesn’t exist.</h1>
-            <p>The requested route or file could not be found. You can return to the upload experience and keep going.</p>
-            <div class="error-code">404</div>
-            <div class="hero-actions hero-actions-center">
-              <a href="/" class="button button-primary">Go Home</a>
-            </div>
-          </div>
+  <main class="center-stage">
+    <section class="container error-shell">
+      <article class="error-card reveal">
+        <span class="eyebrow"><%= safeEyebrow %></span>
+        <div class="error-code"><%= safeStatus %></div>
+        <h1><%= safeTitle %></h1>
+        <p><%= safeMessage %></p>
+
+        <div class="result-actions">
+          <a href="/" class="button button-primary">
+            <i class="bi bi-house-door" aria-hidden="true"></i>
+            <span>Go home</span>
+          </a>
+          <a href="/#upload" class="button button-secondary">
+            <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+            <span>Upload file</span>
+          </a>
         </div>
-      </section>
-    </main>
-  </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="/assets/js/main.js"></script>
 </body>
 
 </html>

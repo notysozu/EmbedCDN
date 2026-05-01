@@ -1,13 +1,13 @@
 {
     "api": {
-        "apiToken": "YfZFAFunQa4kUy5e"
+        "apiToken": ""
     },
     "app": {
-        "appPort": 80,
+        "appPort": 3000,
         "appLink": "http://cdn.nicoruiz.dev",
-        "appName": "Discord CDN",
+        "appName": "EmbedCDN",
         "appFavicon": "https://avatars.githubusercontent.com/u/77137417?v=4",
-        "webhookURL": "https://discord.com/api/webhooks/1071138758759559168/srkPe4xG-RxuKdrAuvTz8TtjUyDvzHU6c628FophxN_Yl1Ts0cWGDAJ_b-fF1tILtWS7"
+        "webhookURL": ""
     },
     "social": {
         "discord": "https://discord.gg/XraBC45vs2",

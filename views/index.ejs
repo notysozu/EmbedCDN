@@ -4,265 +4,328 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <% const safeAppName = typeof appName !== "undefined" && appName ? appName : "DiscordCDN"; %>
-  <% const safeFavicon = typeof appFavicon !== "undefined" && appFavicon ? appFavicon : "/assets/logo.ico"; %>
+  <% const safeAppName = typeof appName !== "undefined" && appName ? appName : "EmbedCDN"; %>
+  <% const safeBaseUrl = typeof appBaseUrl !== "undefined" && appBaseUrl ? appBaseUrl : ""; %>
   <% const safeDiscord = typeof discordInvite !== "undefined" && discordInvite ? discordInvite : "#"; %>
   <% const safeTwitter = typeof twitterInvite !== "undefined" && twitterInvite ? twitterInvite : "#"; %>
   <% const safeFacebook = typeof facebookInvite !== "undefined" && facebookInvite ? facebookInvite : "#"; %>
   <% const safeInstagram = typeof instagramInvite !== "undefined" && instagramInvite ? instagramInvite : "#"; %>
   <% const safeLinkedin = typeof linkedinInvite !== "undefined" && linkedinInvite ? linkedinInvite : "#"; %>
+  <% const safeUploadError = typeof uploadError !== "undefined" && uploadError ? uploadError : ""; %>
+  <% const safeForm = typeof formValues !== "undefined" && formValues ? formValues : {}; %>
+  <% const safeSlug = safeForm.customSlug ? String(safeForm.customSlug) : ""; %>
+  <% const safeTitle = safeForm.title ? String(safeForm.title) : ""; %>
+  <% const safeDescription = safeForm.description ? String(safeForm.description) : ""; %>
 
-  <title><%= safeAppName %> | Discord File Hosting</title>
-  <meta name="description"
-    content="<%= safeAppName %> helps you upload files, generate stable Discord-ready links, and ship shareable embeds with a premium developer-first workflow.">
-  <meta name="keywords" content="discord, file hosting, embed hosting, image upload, shareable links">
-  <link href="<%= safeFavicon %>" rel="icon">
-  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <title><%= safeAppName %> | Embed Hosting</title>
+  <meta name="description" content="<%= safeAppName %> creates clean, stable, preview-friendly file links and short URLs for Discord and social sharing.">
+  <meta name="keywords" content="discord embed hosting, file hosting, url shortener, image upload, short links">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="assets/css/style.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="/assets/css/style.css" rel="stylesheet">
 </head>
 
-<body class="theme-dark">
-  <div class="site-shell">
-    <div class="bg-orb bg-orb-one" aria-hidden="true"></div>
-    <div class="bg-orb bg-orb-two" aria-hidden="true"></div>
-    <div class="bg-grid" aria-hidden="true"></div>
+<body class="product-shell" data-page="home">
+  <div class="texture-layer" aria-hidden="true"></div>
 
-    <header class="site-header" id="top">
-      <div class="container nav-shell">
-        <a class="brand-mark" href="/" aria-label="<%= safeAppName %> home">
-          <span class="brand-icon">D</span>
+  <header class="site-header" id="top">
+    <div class="container nav-shell">
+      <a class="brand-mark" href="/" aria-label="<%= safeAppName %> home">
+        <span class="brand-copy">
+          <strong><%= safeAppName %></strong>
+          <small>Tiny link. Big preview.</small>
+        </span>
+      </a>
+
+      <button class="nav-toggle icon-button" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Toggle navigation" data-nav-toggle>
+        <i class="bi bi-list" aria-hidden="true"></i>
+      </button>
+
+      <nav class="site-nav" id="site-nav" data-nav-panel aria-label="Primary navigation">
+        <a href="#upload">Upload</a>
+        <a href="#features">Features</a>
+        <a href="#api">API</a>
+        <a href="<%= safeDiscord %>" target="_blank" rel="noreferrer">Discord</a>
+      </nav>
+
+      <button class="button button-quiet command-button" type="button" data-command-trigger>
+        <i class="bi bi-command" aria-hidden="true"></i>
+        <span>Command</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero-section">
+      <div class="container hero-grid">
+        <div class="hero-copy reveal">
+          <h1>Clean embed links that do not look like a storage accident.</h1>
+          <p class="hero-text">
+            Upload once. Share everywhere. <%= safeAppName %> turns files into stable Discord/social preview links with automatic short URLs and custom slugs.
+          </p>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#upload">
+              <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+              <span>Upload file</span>
+            </a>
+            <a class="button button-secondary" href="#slug-control">
+              <i class="bi bi-link-45deg" aria-hidden="true"></i>
+              <span>Claim short link</span>
+            </a>
+          </div>
+          <div class="hero-note">
+            <span>Discord is gonna love this one.</span>
+            <span>Your file is cooking 🔥</span>
+          </div>
+        </div>
+
+        <aside class="hero-preview reveal" aria-label="Discord embed preview">
+          <div class="preview-card offset-card">
+            <div class="message-head">
+              <span class="avatar-chip" aria-hidden="true">dc</span>
+              <div>
+                <strong><%= safeAppName %></strong>
+                <small>Today at 10:24 PM</small>
+              </div>
+            </div>
+            <div class="discord-embed-card">
+              <span class="embed-rail" aria-hidden="true"></span>
+              <div class="embed-body">
+                <strong data-preview-title>Hackathon recap.png</strong>
+                <p data-preview-description>Tiny link. Big preview. Clean enough for the announcement channel.</p>
+                <div class="embed-image-sample" data-preview-image aria-label="Preview artwork"></div>
+                <div class="embed-link-lines">
+                  <code data-preview-file-link><%= safeBaseUrl || "https://yourdomain.com" %>/files/demo.png</code>
+                  <code data-preview-short-link><%= safeBaseUrl || "https://yourdomain.com" %>/s/hackathon-demo</code>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="upload-section" id="upload">
+      <div class="container upload-grid">
+        <form class="upload-card reveal" method="POST" action="/upload" enctype="multipart/form-data" data-upload-form novalidate>
+          <div class="section-kicker">
+            <span class="eyebrow">Upload console</span>
+            <p>Drag in the asset, tune the preview, and mint a clean short link in one pass.</p>
+          </div>
+
+          <div class="form-alert <%= safeUploadError ? "" : "is-hidden" %>" role="alert" data-form-error>
+            <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+            <span><%= safeUploadError %></span>
+          </div>
+
+          <label class="drop-zone" for="files" data-upload-zone tabindex="0">
+            <input class="sr-only" type="file" id="files" name="myFile" data-file-input>
+            <span class="drop-icon" aria-hidden="true"><i class="bi bi-file-earmark-arrow-up"></i></span>
+            <strong data-upload-title>Drop a file here</strong>
+            <span data-upload-subtitle>Images get a live preview. Everything gets an embed link and short URL.</span>
+            <span class="selected-pill" data-file-name>No file selected</span>
+          </label>
+
+          <div class="selected-file-card is-hidden" data-file-card>
+            <div class="file-thumb" data-file-thumb>
+              <i class="bi bi-file-earmark-richtext" aria-hidden="true"></i>
+              <img src="" alt="" data-file-preview>
+            </div>
+            <div>
+              <strong data-selected-name>Waiting for a file</strong>
+              <span data-selected-size>0 KB</span>
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <label class="field">
+              <span>Embed title</span>
+              <input type="text" name="title" maxlength="90" value="<%= safeTitle %>" placeholder="Launch poster, build log, screenshot..." data-title-input>
+            </label>
+
+            <label class="field">
+              <span>Embed description</span>
+              <textarea name="description" maxlength="180" rows="4" placeholder="A line that makes the preview feel intentional." data-description-input><%= safeDescription %></textarea>
+            </label>
+          </div>
+
+          <label class="field slug-field" id="slug-control">
+            <span>
+              Custom short link
+              <button class="tooltip-trigger" type="button" data-tooltip="Custom slug: lowercase letters, numbers, and hyphens. Leave it empty and we will mint a readable code.">
+                <i class="bi bi-info-circle" aria-hidden="true"></i>
+                <span class="sr-only">Custom slug help</span>
+              </button>
+            </span>
+            <div class="slug-input-wrap">
+              <span><%= safeBaseUrl || "yourdomain.com" %>/s/</span>
+              <input id="customSlug" type="text" name="customSlug" value="<%= safeSlug %>" maxlength="40" inputmode="url" autocomplete="off" placeholder="hackathon-demo" data-slug-input>
+            </div>
+            <small class="field-help" data-slug-help>Use lowercase letters, numbers, and hyphens. Max 40 characters.</small>
+          </label>
+
+          <button class="button button-primary button-full" type="submit" data-submit-button>
+            <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+            <span class="button-label">Upload and mint links</span>
+            <span class="button-loading">Uploading...</span>
+          </button>
+        </form>
+
+        <aside class="preview-lab reveal" aria-label="Live platform previews">
+          <div class="preview-tabs" role="tablist" aria-label="Preview platform" data-preview-tabs>
+            <button class="is-active" type="button" role="tab" aria-selected="true" data-preview-tab="discord">Discord</button>
+            <button type="button" role="tab" aria-selected="false" data-preview-tab="twitter">X/Twitter</button>
+            <button type="button" role="tab" aria-selected="false" data-preview-tab="whatsapp">WhatsApp</button>
+          </div>
+
+          <div class="platform-preview is-active" role="tabpanel" data-preview-panel="discord">
+            <div class="message-head">
+              <span class="avatar-chip" aria-hidden="true">dc</span>
+              <div>
+                <strong><%= safeAppName %></strong>
+                <small>Bot preview</small>
+              </div>
+            </div>
+            <div class="discord-embed-card">
+              <span class="embed-rail" aria-hidden="true"></span>
+              <div class="embed-body">
+                <strong data-preview-title>Fresh upload</strong>
+                <p data-preview-description>Upload once. Share everywhere.</p>
+                <div class="embed-image-sample" data-preview-image></div>
+                <code data-preview-short-link><%= safeBaseUrl || "https://yourdomain.com" %>/s/ready</code>
+              </div>
+            </div>
+          </div>
+
+          <div class="platform-preview" role="tabpanel" data-preview-panel="twitter" hidden>
+            <div class="social-preview-card twitter-card">
+              <div class="social-image" data-preview-image></div>
+              <div>
+                <strong data-preview-title>Fresh upload</strong>
+                <p data-preview-description>Upload once. Share everywhere.</p>
+                <span data-preview-short-link><%= safeBaseUrl || "yourdomain.com" %>/s/ready</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="platform-preview" role="tabpanel" data-preview-panel="whatsapp" hidden>
+            <div class="social-preview-card whatsapp-card">
+              <div class="social-image" data-preview-image></div>
+              <div>
+                <strong data-preview-title>Fresh upload</strong>
+                <p data-preview-description>Upload once. Share everywhere.</p>
+                <span data-preview-short-link><%= safeBaseUrl || "yourdomain.com" %>/s/ready</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="preview-actions">
+            <button class="button button-quiet" type="button" data-open-recent>
+              <i class="bi bi-clock-history" aria-hidden="true"></i>
+              <span>Recent uploads</span>
+            </button>
+            <button class="button button-quiet" type="button" data-copy-latest>
+              <i class="bi bi-copy" aria-hidden="true"></i>
+              <span>Copy latest</span>
+            </button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="feature-section" id="features">
+      <div class="container">
+        <div class="section-heading reveal">
+          <span class="eyebrow">Built like a real utility</span>
+          <h2>Small surface area. High confidence links.</h2>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature-card reveal" data-tooltip="Discord embed link: a stable /files URL with preview metadata for rich cards.">
+            <i class="bi bi-discord" aria-hidden="true"></i>
+            <h3>Discord Embed Links</h3>
+            <p>Preview-friendly pages wrapped around your uploaded file.</p>
+          </article>
+          <article class="feature-card reveal" data-tooltip="Short link: a readable /s/code redirect for cleaner sharing.">
+            <i class="bi bi-link-45deg" aria-hidden="true"></i>
+            <h3>URL Shortener</h3>
+            <p>Every upload gets a compact redirect automatically.</p>
+          </article>
+          <article class="feature-card reveal" data-tooltip="Custom slug: claim a memorable short URL when the name is available.">
+            <i class="bi bi-fingerprint" aria-hidden="true"></i>
+            <h3>Custom Slugs</h3>
+            <p>Use names like hackathon-demo or patch-notes-7.</p>
+          </article>
+          <article class="feature-card reveal">
+            <i class="bi bi-graph-up-arrow" aria-hidden="true"></i>
+            <h3>Analytics Ready</h3>
+            <p>Counts uploads, short-link clicks, and file views.</p>
+          </article>
+          <article class="feature-card reveal" data-tooltip="API upload: token-protected uploads for bots, scripts, and build tools.">
+            <i class="bi bi-terminal" aria-hidden="true"></i>
+            <h3>API Uploads</h3>
+            <p>Keep automation alive with the existing API route.</p>
+          </article>
+          <article class="feature-card reveal" data-tooltip="Private links and expiry controls are structured for future release.">
+            <i class="bi bi-lightning-charge" aria-hidden="true"></i>
+            <h3>Fast Sharing</h3>
+            <p>Local or Blob storage, clean handoff, no dashboard required.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="api-section" id="api">
+      <div class="container api-grid">
+        <div class="section-heading reveal">
+          <span class="eyebrow">API ready</span>
+          <h2>Upload from bots and scripts without losing the pretty links.</h2>
+          <p>The API response now returns the full embed link and the short link.</p>
+        </div>
+        <pre class="code-panel reveal"><code>POST /api/upload
+x-api-token: $API_TOKEN
+multipart: myFile, customSlug, title, description
+
+{
+  "fileLink": "/files/:id",
+  "shortLink": "/s/:code"
+}</code></pre>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <a class="brand-mark" href="/">
           <span class="brand-copy">
             <strong><%= safeAppName %></strong>
-            <small>Embed hosting for Discord</small>
+            <small>Upload once. Share everywhere.</small>
           </span>
         </a>
+      </div>
 
-        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Toggle navigation" data-nav-toggle>
-          <span></span>
-          <span></span>
+      <form action="/subscribe" method="post" class="newsletter-form">
+        <label class="sr-only" for="email">Email address</label>
+        <input id="email" type="email" name="email" placeholder="release-notes@example.com" required>
+        <button class="button button-secondary" type="submit">
+          <i class="bi bi-send" aria-hidden="true"></i>
+          <span>Subscribe</span>
         </button>
+      </form>
 
-        <nav class="site-nav" id="site-nav" data-nav-panel>
-          <a href="#features">Features</a>
-          <a href="#workflow">Workflow</a>
-          <a href="#upload">Upload</a>
-          <a href="#footer-newsletter">Updates</a>
-          <a href="<%= safeDiscord %>" target="_blank" rel="noreferrer">Discord</a>
-          <a href="https://github.com/NicoRuizDev/DiscordCDN" target="_blank" rel="noreferrer">GitHub</a>
-        </nav>
+      <div class="social-row" aria-label="Social links">
+        <a href="<%= safeTwitter %>" aria-label="Twitter" target="_blank" rel="noreferrer"><i class="bi bi-twitter-x"></i></a>
+        <a href="<%= safeFacebook %>" aria-label="Facebook" target="_blank" rel="noreferrer"><i class="bi bi-facebook"></i></a>
+        <a href="<%= safeInstagram %>" aria-label="Instagram" target="_blank" rel="noreferrer"><i class="bi bi-instagram"></i></a>
+        <a href="<%= safeLinkedin %>" aria-label="LinkedIn" target="_blank" rel="noreferrer"><i class="bi bi-linkedin"></i></a>
       </div>
-    </header>
+    </div>
+  </footer>
 
-    <main>
-      <section class="hero-section">
-        <div class="container hero-grid">
-          <div class="hero-copy reveal">
-            <span class="eyebrow">Stable links. Better embeds. Zero friction.</span>
-            <h1>Host images and files with a polished Discord-native workflow.</h1>
-            <p class="hero-text">
-              <%= safeAppName %> turns uploads into clean, dependable share links built for Discord previews, social embeds,
-              bots, and developer tooling. Fast to use, easy to trust, and designed like a real product.
-            </p>
-
-            <div class="hero-actions">
-              <a class="button button-primary" href="#upload">Start Uploading</a>
-              <a class="button button-secondary" href="https://docs.nicoruiz.dev" target="_blank" rel="noreferrer">Read Docs</a>
-            </div>
-
-            <ul class="hero-points" aria-label="Key benefits">
-              <li>Stable shareable file URLs</li>
-              <li>Discord-friendly preview workflow</li>
-              <li>API-ready for automation</li>
-            </ul>
-          </div>
-
-          <div class="hero-panel reveal">
-            <div class="glass-panel spotlight-card">
-              <div class="panel-badge">
-                <span class="status-dot"></span>
-                Live upload pipeline
-              </div>
-              <div class="mock-window">
-                <div class="mock-window-bar">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-                <div class="mock-window-body">
-                  <div class="metric-row">
-                    <div>
-                      <small>Avg. share time</small>
-                      <strong>Under 10s</strong>
-                    </div>
-                    <div>
-                      <small>Delivery mode</small>
-                      <strong>Direct + embed links</strong>
-                    </div>
-                  </div>
-                  <div class="mock-link-card">
-                    <span class="tag">Generated URL</span>
-                    <code>https://your-domain/files/x7Bf2jP91kq4R8nLmQ2v.png</code>
-                  </div>
-                  <div class="discord-preview">
-                    <div class="discord-bar"></div>
-                    <div class="discord-content">
-                      <strong><%= safeAppName %></strong>
-                      <p>Preview-ready image card for Discord and social embeds.</p>
-                      <div class="preview-image-glow"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section" id="features">
-        <div class="container">
-          <div class="section-heading reveal">
-            <span class="eyebrow">Product Value</span>
-            <h2>Built for creators, communities, and developer workflows</h2>
-            <p>A modern Discord-focused hosting surface with premium UX and practical delivery paths.</p>
-          </div>
-
-          <div class="feature-grid">
-            <article class="glass-panel feature-card reveal">
-              <div class="feature-icon"><i class="bi bi-cloud-arrow-up"></i></div>
-              <h3>Upload files</h3>
-              <p>Drag, drop, and ship images or assets through a clean interface that feels fast on desktop and mobile.</p>
-            </article>
-
-            <article class="glass-panel feature-card reveal">
-              <div class="feature-icon"><i class="bi bi-discord"></i></div>
-              <h3>Generate embed links</h3>
-              <p>Get stable shareable URLs designed to work cleanly in Discord previews and external social cards.</p>
-            </article>
-
-            <article class="glass-panel feature-card reveal">
-              <div class="feature-icon"><i class="bi bi-activity"></i></div>
-              <h3>Track uploads</h3>
-              <p>Present a trustworthy operational feel with upload details, file stats, and result-state clarity.</p>
-            </article>
-
-            <article class="glass-panel feature-card reveal">
-              <div class="feature-icon"><i class="bi bi-code-slash"></i></div>
-              <h3>API support</h3>
-              <p>Fits automated pipelines too, with token-based API uploads preserved for scripts, bots, and integrations.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="section" id="workflow">
-        <div class="container">
-          <div class="workflow-grid">
-            <article class="glass-panel workflow-card reveal">
-              <span class="step-chip">01</span>
-              <h3>Select a file</h3>
-              <p>Choose media, screenshots, assets, or docs through a high-clarity upload surface.</p>
-            </article>
-            <article class="glass-panel workflow-card reveal">
-              <span class="step-chip">02</span>
-              <h3>Generate a stable link</h3>
-              <p>The existing backend creates a hosted asset URL and a dedicated share page for embeds.</p>
-            </article>
-            <article class="glass-panel workflow-card reveal">
-              <span class="step-chip">03</span>
-              <h3>Share anywhere</h3>
-              <p>Drop the link into Discord, docs, websites, or internal tools and keep a polished preview experience.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="section section-upload" id="upload">
-        <div class="container upload-layout">
-          <div class="section-heading reveal">
-            <span class="eyebrow">Upload Console</span>
-            <h2>Premium upload experience, same backend behavior</h2>
-            <p>The form still posts to the current upload route and keeps the existing file field name intact.</p>
-          </div>
-
-          <div class="upload-grid">
-            <form class="glass-panel upload-card reveal" method="POST" action="/upload" enctype="multipart/form-data" data-upload-form>
-              <label class="upload-zone" for="files" data-upload-zone tabindex="0">
-                <input class="sr-only" type="file" id="files" name="myFile" multiple="multiple" data-file-input>
-                <span class="upload-icon"><i class="bi bi-image"></i></span>
-                <strong data-upload-title>Drop files here or click to browse</strong>
-                <span data-upload-subtitle>Supports images, videos, and general files with your current upload route.</span>
-                <span class="upload-file-name" data-file-name>No file selected</span>
-              </label>
-
-              <div class="upload-actions">
-                <button class="button button-primary button-full" type="submit" data-submit-button>
-                  <span class="button-label">Upload Files</span>
-                  <span class="button-loading">Uploading...</span>
-                </button>
-              </div>
-            </form>
-
-            <aside class="glass-panel info-card reveal">
-              <span class="panel-label">Why teams use it</span>
-              <ul class="signal-list">
-                <li>Share image embeds in Discord without exposing messy file storage paths.</li>
-                <li>Keep an easy human-friendly upload flow alongside API automation.</li>
-                <li>Maintain a trustworthy, production-quality front door for a lightweight service.</li>
-              </ul>
-              <div class="mini-stats">
-                <div>
-                  <small>Routes preserved</small>
-                  <strong>`/upload`, `/files/*`</strong>
-                </div>
-                <div>
-                  <small>Storage preserved</small>
-                  <strong>Local + Vercel Blob</strong>
-                </div>
-              </div>
-            </aside>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer class="site-footer" id="footer-newsletter">
-      <div class="container footer-grid">
-        <div class="footer-brand">
-          <a class="brand-mark brand-mark-footer" href="/">
-            <span class="brand-icon">D</span>
-            <span class="brand-copy">
-              <strong><%= safeAppName %></strong>
-              <small>Clean delivery for Discord-ready assets</small>
-            </span>
-          </a>
-          <p>Upload once, share confidently, and keep your lightweight hosting service feeling like a premium SaaS product.</p>
-          <div class="social-row" aria-label="Social links">
-            <a href="<%= safeTwitter %>" aria-label="Twitter" target="_blank" rel="noreferrer"><i class="bi bi-twitter-x"></i></a>
-            <a href="<%= safeFacebook %>" aria-label="Facebook" target="_blank" rel="noreferrer"><i class="bi bi-facebook"></i></a>
-            <a href="<%= safeInstagram %>" aria-label="Instagram" target="_blank" rel="noreferrer"><i class="bi bi-instagram"></i></a>
-            <a href="<%= safeLinkedin %>" aria-label="LinkedIn" target="_blank" rel="noreferrer"><i class="bi bi-linkedin"></i></a>
-          </div>
-        </div>
-
-        <div class="footer-newsletter glass-panel">
-          <span class="panel-label">Stay in the loop</span>
-          <h3>Get product updates</h3>
-          <p>Subscribe for release notes, improvements, and tooling updates.</p>
-          <form action="/subscribe" method="post" class="newsletter-form">
-            <label class="sr-only" for="email">Email address</label>
-            <input id="email" type="email" name="email" placeholder="Enter your email" aria-describedby="emailHelp" required>
-            <button class="button button-primary" type="submit">Subscribe</button>
-          </form>
-        </div>
-      </div>
-    </footer>
-  </div>
-
-  <script src="assets/js/main.js"></script>
+  <script src="/assets/js/main.js"></script>
 </body>
 
 </html>

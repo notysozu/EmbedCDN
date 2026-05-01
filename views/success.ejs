@@ -4,133 +4,159 @@
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <% const safeAppName = typeof appName !== "undefined" && appName ? appName : "DiscordCDN"; %>
-  <% const safeFavicon = typeof appFavicon !== "undefined" && appFavicon ? appFavicon : "/assets/logo.ico"; %>
-  <% const safeDiscord = typeof discordInvite !== "undefined" && discordInvite ? discordInvite : "#"; %>
-  <% const safeTwitter = typeof twitterInvite !== "undefined" && twitterInvite ? twitterInvite : "#"; %>
-  <% const safeFacebook = typeof facebookInvite !== "undefined" && facebookInvite ? facebookInvite : "#"; %>
-  <% const safeInstagram = typeof instagramInvite !== "undefined" && instagramInvite ? instagramInvite : "#"; %>
-  <% const safeLinkedin = typeof linkedinInvite !== "undefined" && linkedinInvite ? linkedinInvite : "#"; %>
+  <% const safeAppName = typeof appName !== "undefined" && appName ? appName : "EmbedCDN"; %>
   <% const safeUploadLink = typeof uploadLink !== "undefined" && uploadLink ? uploadLink : ""; %>
   <% const safeFileLink = typeof fileLink !== "undefined" && fileLink ? fileLink : ""; %>
+  <% const safeShortLink = typeof shortLink !== "undefined" && shortLink ? shortLink : ""; %>
+  <% const safeShortCode = typeof shortCode !== "undefined" && shortCode ? shortCode : ""; %>
   <% const safeFileName = typeof fileName !== "undefined" && fileName ? fileName : "Unknown file"; %>
+  <% const safeOriginalName = typeof originalName !== "undefined" && originalName ? originalName : safeFileName; %>
   <% const safeFileSize = typeof fileSize !== "undefined" && fileSize ? fileSize : "Unknown size"; %>
+  <% const safeEmbedTitle = typeof embedTitle !== "undefined" && embedTitle ? embedTitle : safeOriginalName; %>
+  <% const safeEmbedDescription = typeof embedDescription !== "undefined" && embedDescription ? embedDescription : "Upload once. Share everywhere."; %>
   <% const isImage = safeUploadLink && /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i.test(safeUploadLink); %>
 
   <title><%= safeAppName %> | Upload Complete</title>
-  <meta name="description" content="Your file has been uploaded successfully. Copy the shareable Discord-ready link from <%= safeAppName %>.">
-  <link href="<%= safeFavicon %>" rel="icon">
-  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <meta name="description" content="Your file has been uploaded successfully. Copy the embed link or short link from <%= safeAppName %>.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="assets/css/style.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="/assets/css/style.css" rel="stylesheet">
 </head>
 
-<body class="theme-dark">
-  <div class="site-shell site-shell-compact">
-    <div class="bg-orb bg-orb-one" aria-hidden="true"></div>
-    <div class="bg-orb bg-orb-two" aria-hidden="true"></div>
-    <div class="bg-grid" aria-hidden="true"></div>
+<body class="product-shell result-page" data-page="success">
+  <div class="texture-layer" aria-hidden="true"></div>
 
-    <header class="site-header">
-      <div class="container nav-shell">
-        <a class="brand-mark" href="/" aria-label="<%= safeAppName %> home">
-          <span class="brand-icon">D</span>
-          <span class="brand-copy">
-            <strong><%= safeAppName %></strong>
-            <small>Upload result</small>
-          </span>
-        </a>
+  <header class="site-header">
+    <div class="container nav-shell">
+      <a class="brand-mark" href="/" aria-label="<%= safeAppName %> home">
+        <span class="brand-copy">
+          <strong><%= safeAppName %></strong>
+          <small>Upload complete</small>
+        </span>
+      </a>
 
-        <nav class="site-nav site-nav-inline">
-          <a href="/">New Upload</a>
-          <a href="<%= safeDiscord %>" target="_blank" rel="noreferrer">Discord</a>
-          <a href="https://github.com/NicoRuizDev/DiscordCDN" target="_blank" rel="noreferrer">GitHub</a>
-        </nav>
-      </div>
-    </header>
+      <nav class="site-nav site-nav-inline" aria-label="Result navigation">
+        <a href="/">New upload</a>
+        <a href="<%= safeFileLink %>" target="_blank" rel="noreferrer">Open embed</a>
+      </nav>
+    </div>
+  </header>
 
-    <main class="page-main">
-      <section class="section result-section">
-        <div class="container">
-          <div class="result-grid">
-            <article class="glass-panel result-card reveal">
-              <span class="eyebrow">Upload Complete</span>
-              <h1>Your file is live and ready to share.</h1>
-              <p>Copy the generated link, preview the hosted asset, or start another upload without leaving the flow.</p>
+  <main class="center-stage">
+    <section class="container result-shell" data-upload-result data-file-name="<%= safeOriginalName %>" data-embed-link="<%= safeFileLink %>" data-short-link="<%= safeShortLink %>" data-direct-link="<%= safeUploadLink %>">
+      <article class="success-modal reveal">
+        <button class="icon-button close-card" type="button" aria-label="Close success card" data-dismiss-card>
+          <i class="bi bi-x-lg" aria-hidden="true"></i>
+        </button>
 
-              <div class="link-stack">
-                <label for="generated-link">Generated share page</label>
-                <div class="copy-field">
-                  <input id="generated-link" type="text" value="<%= safeFileLink %>" readonly data-copy-input>
-                  <button class="button button-primary" type="button" data-copy-button data-copy-value="<%= safeFileLink %>">
-                    <span class="copy-default">Copy Link</span>
-                    <span class="copy-success">Copied</span>
-                  </button>
-                </div>
+        <div class="success-mark" aria-hidden="true">
+          <svg viewBox="0 0 52 52" focusable="false">
+            <circle cx="26" cy="26" r="24"></circle>
+            <path d="M15 27.5 22.2 34 37 18.5"></path>
+          </svg>
+        </div>
+
+        <span class="eyebrow">Upload complete</span>
+        <h1>File live. Short link minted.</h1>
+        <p>Discord is gonna love this one. Copy the compact link, keep the full embed route, or open the hosted preview.</p>
+
+        <div class="result-layout">
+          <div class="result-links">
+            <div class="copy-block">
+              <label>
+                Discord embed link
+                <button class="tooltip-trigger" type="button" data-tooltip="Discord embed link: use this when you want the rich preview page.">
+                  <i class="bi bi-info-circle" aria-hidden="true"></i>
+                  <span class="sr-only">Embed link help</span>
+                </button>
+              </label>
+              <div class="copy-field">
+                <input type="text" value="<%= safeFileLink %>" readonly>
+                <button class="icon-button copy-icon" type="button" data-copy-button data-copy-value="<%= safeFileLink %>" data-copy-label="Copied embed link">
+                  <i class="bi bi-copy" aria-hidden="true"></i>
+                  <span class="sr-only">Copy embed link</span>
+                </button>
               </div>
+            </div>
 
-              <div class="detail-grid">
-                <div class="detail-item">
-                  <small>Stored file name</small>
-                  <strong><%= safeFileName %></strong>
-                </div>
-                <div class="detail-item">
-                  <small>Estimated size</small>
-                  <strong><%= safeFileSize %></strong>
-                </div>
-                <div class="detail-item">
-                  <small>Direct asset</small>
-                  <strong><a href="<%= safeUploadLink %>" target="_blank" rel="noreferrer">Open file</a></strong>
-                </div>
+            <div class="copy-block">
+              <label>
+                Short link
+                <button class="tooltip-trigger" type="button" data-tooltip="Short link: compact /s/<%= safeShortCode %> redirect, perfect for Discord and social captions.">
+                  <i class="bi bi-info-circle" aria-hidden="true"></i>
+                  <span class="sr-only">Short link help</span>
+                </button>
+              </label>
+              <div class="copy-field">
+                <input type="text" value="<%= safeShortLink %>" readonly>
+                <button class="icon-button copy-icon" type="button" data-copy-button data-copy-value="<%= safeShortLink %>" data-copy-label="Copied short link">
+                  <i class="bi bi-copy" aria-hidden="true"></i>
+                  <span class="sr-only">Copy short link</span>
+                </button>
               </div>
+            </div>
 
-              <div class="hero-actions">
-                <a class="button button-secondary" href="/">Upload Another</a>
-                <a class="button button-ghost" href="<%= safeFileLink %>" target="_blank" rel="noreferrer">Open Share Page</a>
-              </div>
-            </article>
+            <div class="result-actions">
+              <a class="button button-primary" href="<%= safeFileLink %>" target="_blank" rel="noreferrer">
+                <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+                <span>Open link</span>
+              </a>
+              <a class="button button-secondary" href="/">
+                <i class="bi bi-plus-lg" aria-hidden="true"></i>
+                <span>Upload another</span>
+              </a>
+            </div>
+          </div>
 
-            <aside class="glass-panel preview-card reveal">
-              <span class="panel-label">Preview</span>
-              <h2>Discord-style appearance</h2>
-              <div class="discord-preview discord-preview-large">
-                <div class="discord-bar"></div>
-                <div class="discord-content">
-                  <strong><%= safeAppName %></strong>
-                  <p>Hosted asset ready for previews and clean social sharing.</p>
-                  <% if (safeUploadLink && isImage) { %>
-                    <img src="<%= safeUploadLink %>" alt="Uploaded file preview" class="result-image-preview">
-                  <% } else { %>
-                    <div class="file-placeholder">
-                      <i class="bi bi-file-earmark-richtext"></i>
-                      <span><%= safeFileName %></span>
-                    </div>
-                  <% } %>
-                </div>
+          <aside class="file-preview-panel">
+            <% if (safeUploadLink && isImage) { %>
+              <img src="<%= safeUploadLink %>" alt="Uploaded file preview" class="uploaded-preview">
+            <% } else { %>
+              <div class="file-placeholder">
+                <i class="bi bi-file-earmark-richtext" aria-hidden="true"></i>
+                <strong><%= safeOriginalName %></strong>
+                <span><%= safeFileSize %></span>
               </div>
+            <% } %>
+          </aside>
+        </div>
+      </article>
 
-              <div class="social-row social-row-muted" aria-label="Social links">
-                <a href="<%= safeTwitter %>" aria-label="Twitter" target="_blank" rel="noreferrer"><i class="bi bi-twitter-x"></i></a>
-                <a href="<%= safeFacebook %>" aria-label="Facebook" target="_blank" rel="noreferrer"><i class="bi bi-facebook"></i></a>
-                <a href="<%= safeInstagram %>" aria-label="Instagram" target="_blank" rel="noreferrer"><i class="bi bi-instagram"></i></a>
-                <a href="<%= safeLinkedin %>" aria-label="LinkedIn" target="_blank" rel="noreferrer"><i class="bi bi-linkedin"></i></a>
-              </div>
-            </aside>
+      <aside class="result-side reveal">
+        <div class="discord-embed-card">
+          <span class="embed-rail" aria-hidden="true"></span>
+          <div class="embed-body">
+            <strong><%= safeEmbedTitle %></strong>
+            <p><%= safeEmbedDescription %></p>
+            <% if (safeUploadLink && isImage) { %>
+              <img src="<%= safeUploadLink %>" alt="Discord-style preview image" class="embed-image-real">
+            <% } else { %>
+              <div class="embed-image-sample file-sample"></div>
+            <% } %>
+            <code><%= safeShortLink %></code>
           </div>
         </div>
-      </section>
-    </main>
-  </div>
+
+        <div class="qr-card">
+          <div class="qr-placeholder" data-qr-placeholder data-qr-value="<%= safeShortLink %>" aria-hidden="true"></div>
+          <div>
+            <strong>Short link handoff</strong>
+            <p>Clean structure is ready for a real QR library when one is added.</p>
+          </div>
+          <!-- TODO: Replace the deterministic placeholder with a real QR generator if a lightweight client library is added. -->
+        </div>
+      </aside>
+    </section>
+  </main>
 
   <script>
     if (window.history.replaceState) {
       window.history.replaceState(null, null, window.location.href);
     }
   </script>
-  <script src="assets/js/main.js"></script>
+  <script src="/assets/js/main.js"></script>
 </body>
 
 </html>

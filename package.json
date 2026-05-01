@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "dev": "nodemon ./server.js",
+    "start": "node ./server.js",
     "start-cdn-server": "node ./server.js"
   },
   "author": "Nico Ruiz",
