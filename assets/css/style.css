@@ -190,7 +190,8 @@ textarea {
   grid-column: 3;
 }
 
-.nav-toggle {
+.nav-toggle,
+.nav-toggle.icon-button {
   display: none;
 }
 
