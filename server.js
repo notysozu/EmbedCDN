@@ -14,13 +14,10 @@ const app = express();
 const appName = settings.app.appName || "EmbedCDN";
 const appFavicon = settings.app.appFavicon || "/assets/logo.ico";
 const appPort = Number(process.env.APP_PORT || settings.app.appPort || 3000);
-const configuredAppLink = process.env.APP_LINK || settings.app.appLink || "";
-const appBaseUrl =
-  configuredAppLink && (appPort === 80 || appPort === 443)
-    ? configuredAppLink
-    : configuredAppLink
-      ? `${configuredAppLink}:${appPort}`
-      : `http://localhost:${appPort}`;
+const configuredAppLink = String(process.env.APP_LINK || settings.app.appLink || "")
+  .trim()
+  .replace(/\/+$/g, "");
+const appBaseUrl = configuredAppLink || `http://localhost:${appPort}`;
 const apiToken = process.env.API_TOKEN || settings.api.apiToken || "";
 const webhookUrl = process.env.WEBHOOK_URL || settings.app.webhookURL || "";
 
@@ -516,6 +513,10 @@ async function trackShortClick(code, req) {
   return record;
 }
 
+function isReservedTopLevelPath(code) {
+  return RESERVED_SHORT_SLUGS.has(code) || code === "api-docs";
+}
+
 async function trackFileView(fileId, req) {
   const store = await loadShortLinks();
   const code = store.files[fileId];
@@ -898,6 +899,33 @@ app.get("/s/:code", async (req, res) => {
         errorTitle: "That short link is not in the drawer.",
         errorMessage: "Check the slug and try again, or upload a fresh file.",
       });
+      return;
+    }
+
+    res.redirect(302, record.targetUrl || record.targetPath || `/files/${record.fileId}`);
+  } catch (error) {
+    console.error(error);
+    renderError(req, res, 500, {
+      errorEyebrow: "Redirect Failed",
+      errorTitle: "The short link tripped on the way out.",
+      errorMessage: "The link exists, but the redirect could not be completed right now.",
+    });
+  }
+});
+
+app.get("/:code", async (req, res, next) => {
+  const code = sanitizeSlug(req.params.code);
+
+  if (!code || code !== req.params.code || isReservedTopLevelPath(code)) {
+    next();
+    return;
+  }
+
+  try {
+    const record = await trackShortClick(code, req);
+
+    if (!record) {
+      next();
       return;
     }
 
