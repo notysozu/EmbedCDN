@@ -2,6 +2,7 @@
 node_modules
 .vercel
 .env*.local
+.env
 data/short-links.json
 public/uploads/*
 !public/uploads/test.txt

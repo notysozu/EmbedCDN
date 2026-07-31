@@ -1,152 +1,151 @@
-# <div id="top"></div>
-<!--
-*** Hi
--->
+# <div align="center">🛡️ EmbedCDN</div>
 
+<p align="center">
+  <strong>A privacy-focused Content Delivery Network designed to beautifully embed images on Discord while retaining full data ownership.</strong>
+</p>
 
+<p align="center">
+  <img src="https://img.shields.io/github/license/notysozu/EmbedCDN?style=flat-square&color=blue" alt="License">
+  <img src="https://img.shields.io/badge/node-%3E%3D16.0.0-green?style=flat-square" alt="Node Version">
+  <img src="https://img.shields.io/github/stars/notysozu/EmbedCDN?style=flat-square" alt="Stars">
+  <img src="https://img.shields.io/github/issues/notysozu/EmbedCDN?style=flat-square" alt="Issues">
+</p>
 
-<!-- PROJECT SHIELDS -->
-<!--
-*** I'm using markdown "reference style" links for readability.
-*** Reference links are enclosed in brackets [ ] instead of parentheses ( ).
-*** See the bottom of this document for the declaration of the reference variables
-*** for contributors-url, forks-url, etc. This is an optional, concise syntax you may use.
-*** https://www.markdownguide.org/basic-syntax/#reference-style-links
--->
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
-[![Issues][issues-shield]][issues-url]
-[![MIT License][license-shield]][license-url]
+<div align="center">
+  <img src="assets/banner.jpg" alt="EmbedCDN Banner" width="800" style="border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+</div>
 
-
-
-<!-- PROJECT LOGO -->
 <br />
-<div align="center">
-  
-  <h3 align="center">EmbedCDN</h3>
 
-  <p align="center">
-    A CDN which can be used to display embed images on Discord!
-    <br />
-    <a href="https://docs.nicoruiz.dev/docs/category/embedcdn"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
-    <a href="https://cdn.nicoruiz.dev">View Demo</a>
-    ·
-    <a href="https://github.com/notysozu/EmbedCDN/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/notysozu/EmbedCDN/issues">Request Feature</a>
-  </p>
-</div>
+<p align="center">
+  <a href="https://cdn.api.sonu-kumar.in/">🚀 Live Demo</a>
+  •
+  <a href="https://github.com/notysozu/EmbedCDN/issues">🐛 Report Bug</a>
+  •
+  <a href="https://github.com/notysozu/EmbedCDN/issues">✨ Request Feature</a>
+</p>
 
+---
 
+## 📖 Description
 
-<!-- TABLE OF CONTENTS -->
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li><a href="#about-the-project">About The Project</a></li>
-    <li><a href="#installation">Installation</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
-  </ol>
-</details>
+**EmbedCDN** is a privacy-first, self-hosted Content Delivery Network (CDN) engineered specifically for Discord users who want absolute ownership of their shared files and images. In standard Discord workflows, uploaded images are cached permanently by Discord's media proxy servers, meaning they often persist online even after you delete the message containing them. EmbedCDN solves this issue by serving images on-demand through dynamically generated Open Graph metadata.
 
+When you share an EmbedCDN link, Discord’s crawlers request the image to generate a rich embed preview. By managing the serving layer, EmbedCDN allows you to instantly revoke access to any image. When deleted from your EmbedCDN dashboard, the dynamic Open Graph tags are immediately destroyed, rendering the media completely inaccessible and clearing it from Discord clients in real-time. It serves as a secure, personal data kill-switch for all your shared media.
 
+---
 
-<!-- ABOUT THE PROJECT -->
-## About The Project
+## ⚡ Key Features
 
-This project is maded to make your work easier on Discord. It can easily share files with professional cdn images. This is free to use for private purposes might get copyright issues if you removed the credits. Everything is designed using Material KIT (Thanks for making such a resource, saved alot of time). Make sure to star the directory if you liked our this type of project. Thanks, below is a sneaky peak of the website
+* **🔒 Privacy-First Design**: Retain absolute ownership of your data. Files are hosted on your infrastructure, not on opaque third-party servers.
+* **🔗 Custom Short Links**: Automatically generates sleek, customized short links for every uploaded image.
+* **🛑 Instant Embed Deletion**: A complete kill-switch. When you delete a file from the dashboard, the Discord embed is destroyed instantly.
+* **🤖 Crawler Optimization**: Fine-tuned header responses optimized specifically for the Discord Open Graph crawler to ensure rich, seamless embeds.
+* **🎨 Modern Dashboard**: Powered by Material KIT for a gorgeous, responsive, and intuitive user interface.
 
+---
 
-<div align="center">
-<img src="https://media.discordapp.net/attachments/1063448071167553568/1071423386108055613/image.png?width=972&height=584" alt="Demo" width="972" height="584">
-</div>
+## 🛠️ Tech Stack
 
-<p align="right">(<a href="#top">back to top</a>)</p>
+* **Backend**: Node.js, Express.js
+* **Frontend**: EJS (Embedded JavaScript) Templates, Vanilla CSS, Material KIT styling
+* **File Uploads**: `express-fileupload`, local storage integration with support for Vercel Blob
+* **Environment Configuration**: `dotenv` for seamless local configuration
 
+---
 
+## ⚙️ Prerequisites & Installation
 
-### Tested On
+Follow these steps to set up and run EmbedCDN locally:
 
-* [NodeJs v16](https://nodejs.org)
+### Prerequisites
 
-<p align="right">(<a href="#top">back to top</a>)</p>
+Ensure you have the following installed on your machine:
+* [Node.js](https://nodejs.org/) (Version v16.0.0 or higher)
+* [npm](https://www.npmjs.com/) (Node Package Manager)
 
+### Step-by-Step Installation
 
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/notysozu/EmbedCDN.git
+   cd EmbedCDN
+   ```
 
-<!-- DOCUMENTATION -->
-## Documentation
+2. **Install Dependencies**
+   ```bash
+   npm install
+   ```
 
-Documentation of cdn is hosted on our documentation page: [https://docs.nicoruiz.dev/docs/category/embedcdn](https://docs.nicoruiz.dev/docs/category/embedcdn)
+3. **Configure Environment Variables**
+   Duplicate the `.env.example` file and rename it to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+   Open the `.env` file and configure the settings (see the [Environment Variables](#-environment-variables) section below).
 
+4. **Run the Server**
 
-<p align="right">(<a href="#top">back to top</a>)</p>
+   * For local development with hot-reloading:
+     ```bash
+     npm run dev
+     ```
+   * To start the production server:
+     ```bash
+     npm start
+     ```
 
+The server will spin up and listen on the port defined in your `.env` (default is `http://localhost:3000`).
 
+---
 
-<!-- CONTRIBUTING -->
-## Contributing
+## 🔑 Environment Variables
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+Create a `.env` file in the root directory and define the following variables:
 
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
+```env
+# The public link to your hosted EmbedCDN instance
+APP_LINK=http://localhost
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b notysozu/EmbedCDN`)
-3. Commit your Changes (`git commit -m 'Add some EmbedCDN'`)
-4. Push to the Branch (`git push origin notysozu/EmbedCDN`)
-5. Open a Pull Request
+# The port on which the server runs locally
+APP_PORT=3000
 
-<p align="right">(<a href="#top">back to top</a>)</p>
+# A secure, long, random API token used for authorization
+API_TOKEN=your-very-long-secure-random-token
 
+# Optional: Discord webhook URL to send notifications of uploads
+WEBHOOK_URL=
 
+# Optional: Vercel Blob read/write token for hosting files on Vercel Blob instead of local filesystem
+BLOB_READ_WRITE_TOKEN=
+```
 
-<!-- LICENSE -->
-## License
+---
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
+## 🚀 Usage
 
-<p align="right">(<a href="#top">back to top</a>)</p>
+1. **Access the Dashboard**: Navigate to `http://localhost:3000` (or your public URL) in your browser.
+2. **Upload a File**: Use the web dashboard or make an authorized POST request using your `API_TOKEN`.
+3. **Embed on Discord**: Copy the generated short-link and paste it directly into Discord.
+4. **Instant Revocation**: If you wish to pull the image, delete it from your dashboard. The embed will break immediately for all Discord clients.
 
+---
 
+## 🤝 Contributing
 
-<!-- CONTACT -->
-## Contact
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
-Project Link: [https://github.com/notysozu/EmbedCDN](https://github.com/notysozu/EmbedCDN)
+To contribute:
+1. **Fork** the Project.
+2. Create your **Feature Branch**: `git checkout -b feature/AmazingFeature`
+3. **Commit** your changes: `git commit -m 'Add some AmazingFeature'`
+4. **Push** to the Branch: `git push origin feature/AmazingFeature`
+5. Open a **Pull Request**.
 
-<p align="right">(<a href="#top">back to top</a>)</p>
+For bugs or feature requests, please open a Github issue [here](https://github.com/notysozu/EmbedCDN/issues).
 
+---
 
+## 📄 License
 
-<!-- ACKNOWLEDGMENTS -->
-## Acknowledgments
-
-
-* [NodeJs v16](https://nodejs.org)
-
-
-<p align="right">(<a href="#top">back to top</a>)</p>
-
-
-
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/notysozu/EmbedCDN.svg?style=for-the-badge
-[contributors-url]: https://github.com/notysozu/EmbedCDN/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/notysozu/EmbedCDN.svg?style=for-the-badge
-[forks-url]: https://github.com/notysozu/EmbedCDN/network/members
-[stars-shield]: https://img.shields.io/github/stars/notysozu/EmbedCDN.svg?style=for-the-badge
-[stars-url]: https://github.com/notysozu/EmbedCDN/stargazers
-[issues-shield]: https://img.shields.io/github/issues/notysozu/EmbedCDN.svg?style=for-the-badge
-[issues-url]: https://github.com/notysozu/EmbedCDN/issues
-[license-shield]: https://img.shields.io/github/license/notysozu/EmbedCDN.svg?style=for-the-badge
-[license-url]: https://github.com/notysozu/EmbedCDN/blob/master/LICENSE.txt
-[product-screenshot]: images/screenshot.png
+Distributed under the **MIT License**. See the `LICENSE` file for more details.
