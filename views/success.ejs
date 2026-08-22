@@ -1,161 +1,207 @@
+<%
+  const safeAppName = (typeof appName === 'string' && appName) ? appName : 'EmbedCDN';
+  const safeFavicon = (typeof appFavicon === 'string' && appFavicon) ? appFavicon : '/assets/logo.ico';
+  const safeBaseUrl = (typeof appBaseUrl === 'string' && appBaseUrl) ? appBaseUrl.replace(/\/$/, '') : '';
+  const safeUploadLink = (typeof uploadLink === 'string' && uploadLink) ? uploadLink : '';
+  const safeFileLink = (typeof fileLink === 'string' && fileLink) ? fileLink : safeUploadLink;
+  const safeShortLink = (typeof shortLink === 'string' && shortLink) ? shortLink : '';
+  const safeShortCode = (typeof shortCode === 'string' && shortCode) ? shortCode : '';
+  const safeFileSize = (typeof fileSize === 'string' && fileSize) ? fileSize : 'Hosted file';
+  const safeFileName = (typeof fileName === 'string' && fileName) ? fileName : 'file';
+  const safeOriginalName = (typeof originalName === 'string' && originalName) ? originalName : safeFileName;
+  const safeTitle = (typeof embedTitle === 'string' && embedTitle) ? embedTitle : safeOriginalName;
+  const safeDescription = (typeof embedDescription === 'string' && embedDescription) ? embedDescription : 'Uploaded with ' + safeAppName;
+
+  const lowerName = (safeOriginalName || safeFileName || '').toLowerCase();
+  const isImage = /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/.test(lowerName);
+  const isVideo = /\.(mp4|webm|mov|m4v|ogv)$/.test(lowerName);
+  const isAudio = /\.(mp3|ogg|wav|m4a|flac|aac)$/.test(lowerName);
+%>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="utf-8">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <% const safeAppName = typeof appName !== "undefined" && appName ? appName : "EmbedCDN"; %>
-  <% const safeUploadLink = typeof uploadLink !== "undefined" && uploadLink ? uploadLink : ""; %>
-  <% const safeFileLink = typeof fileLink !== "undefined" && fileLink ? fileLink : ""; %>
-  <% const safeShortLink = typeof shortLink !== "undefined" && shortLink ? shortLink : ""; %>
-  <% const safeShortCode = typeof shortCode !== "undefined" && shortCode ? shortCode : ""; %>
-  <% const safeFileName = typeof fileName !== "undefined" && fileName ? fileName : "Unknown file"; %>
-  <% const safeOriginalName = typeof originalName !== "undefined" && originalName ? originalName : safeFileName; %>
-  <% const safeFileSize = typeof fileSize !== "undefined" && fileSize ? fileSize : "Unknown size"; %>
-  <% const safeEmbedTitle = typeof embedTitle !== "undefined" && embedTitle ? embedTitle : safeOriginalName; %>
-  <% const safeEmbedDescription = typeof embedDescription !== "undefined" && embedDescription ? embedDescription : "Upload once. Share everywhere."; %>
-  <% const isImage = safeUploadLink && /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i.test(safeUploadLink); %>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Upload Complete &mdash; <%= safeAppName %></title>
+  <meta name="description" content="Your file is now live and ready to share across Discord, Twitter, and the web.">
 
-  <title><%= safeAppName %> | Upload Complete</title>
-  <meta name="description" content="Your file has been uploaded successfully. Copy the embed link or short link from <%= safeAppName %>.">
+  <!-- Preconnect & Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link href="/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="/assets/css/style.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/x-icon" href="<%= safeFavicon %>">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/assets/vendor/bootstrap-icons/bootstrap-icons.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 
-<body class="product-shell result-page" data-page="success">
+<body>
   <div class="texture-layer" aria-hidden="true"></div>
+
+  <!-- Auto Registration Target for LocalStorage Recent Uploads -->
+  <div class="sr-only" data-upload-result data-file-name="<%= safeOriginalName %>" data-embed-link="<%= safeFileLink %>" data-short-link="<%= safeShortLink %>" data-direct-link="<%= safeUploadLink %>"></div>
 
   <header class="site-header">
     <div class="container nav-shell">
-      <a class="brand-mark" href="/" aria-label="<%= safeAppName %> home">
+      <a class="brand-mark" href="/" aria-label="<%= safeAppName %> Home">
         <span class="brand-copy">
           <strong><%= safeAppName %></strong>
-          <small>Upload complete</small>
+          <small>Fast Media Delivery</small>
         </span>
       </a>
 
-      <nav class="site-nav site-nav-inline" aria-label="Result navigation">
-        <a href="/">New upload</a>
-        <a href="<%= safeFileLink %>" target="_blank" rel="noreferrer">Open embed</a>
-      </nav>
+      <div class="site-nav-inline">
+        <a class="button button-primary" href="/#upload">
+          <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+          <span>Upload Another</span>
+        </a>
+      </div>
     </div>
   </header>
 
   <main class="center-stage">
-    <section class="container result-shell" data-upload-result data-file-name="<%= safeOriginalName %>" data-embed-link="<%= safeFileLink %>" data-short-link="<%= safeShortLink %>" data-direct-link="<%= safeUploadLink %>">
-      <article class="success-modal reveal">
-        <button class="icon-button close-card" type="button" aria-label="Close success card" data-dismiss-card>
+    <div class="container result-shell">
+      <!-- Main Success Modal Card -->
+      <section class="success-modal" role="dialog" aria-labelledby="success-heading">
+        <button class="icon-button close-card" type="button" data-dismiss-card aria-label="Close and return to upload">
           <i class="bi bi-x-lg" aria-hidden="true"></i>
         </button>
 
         <div class="success-mark" aria-hidden="true">
-          <svg viewBox="0 0 52 52" focusable="false">
+          <svg viewBox="0 0 52 52">
             <circle cx="26" cy="26" r="24"></circle>
-            <path d="M15 27.5 22.2 34 37 18.5"></path>
+            <path d="M14 27l8 8 16-16"></path>
           </svg>
         </div>
 
-        <span class="eyebrow">Upload complete</span>
-        <h1>File live. Short link minted.</h1>
-        <p>Discord is gonna love this one. Copy the compact link, keep the full embed route, or open the hosted preview.</p>
+        <span class="eyebrow">Upload Succeeded</span>
+        <h1 id="success-heading">Your links are ready to share</h1>
+        <p>File uploaded successfully as <strong><%= safeOriginalName %></strong> (<%= safeFileSize %>).</p>
 
         <div class="result-layout">
-          <div class="result-links">
-            <div class="copy-block">
-              <label>
-                Discord embed link
-                <button class="tooltip-trigger" type="button" data-tooltip="Discord embed link: use this when you want the rich preview page.">
-                  <i class="bi bi-info-circle" aria-hidden="true"></i>
-                  <span class="sr-only">Embed link help</span>
-                </button>
-              </label>
-              <div class="copy-field">
-                <input type="text" value="<%= safeFileLink %>" readonly>
-                <button class="icon-button copy-icon" type="button" data-copy-button data-copy-value="<%= safeFileLink %>" data-copy-label="Copied embed link">
-                  <i class="bi bi-copy" aria-hidden="true"></i>
-                  <span class="sr-only">Copy embed link</span>
-                </button>
-              </div>
-            </div>
-
-            <div class="copy-block">
-              <label>
-                Short link
-                <button class="tooltip-trigger" type="button" data-tooltip="Short link: compact /s/<%= safeShortCode %> redirect, perfect for Discord and social captions.">
-                  <i class="bi bi-info-circle" aria-hidden="true"></i>
-                  <span class="sr-only">Short link help</span>
-                </button>
-              </label>
-              <div class="copy-field">
-                <input type="text" value="<%= safeShortLink %>" readonly>
-                <button class="icon-button copy-icon" type="button" data-copy-button data-copy-value="<%= safeShortLink %>" data-copy-label="Copied short link">
-                  <i class="bi bi-copy" aria-hidden="true"></i>
-                  <span class="sr-only">Copy short link</span>
-                </button>
-              </div>
-            </div>
-
-            <div class="result-actions">
-              <a class="button button-primary" href="<%= safeFileLink %>" target="_blank" rel="noreferrer">
-                <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
-                <span>Open link</span>
-              </a>
-              <a class="button button-secondary" href="/">
-                <i class="bi bi-plus-lg" aria-hidden="true"></i>
-                <span>Upload another</span>
-              </a>
-            </div>
-          </div>
-
-          <aside class="file-preview-panel">
-            <% if (safeUploadLink && isImage) { %>
-              <img src="<%= safeUploadLink %>" alt="Uploaded file preview" class="uploaded-preview">
-            <% } else { %>
-              <div class="file-placeholder">
-                <i class="bi bi-file-earmark-richtext" aria-hidden="true"></i>
-                <strong><%= safeOriginalName %></strong>
-                <span><%= safeFileSize %></span>
-              </div>
-            <% } %>
-          </aside>
-        </div>
-      </article>
-
-      <aside class="result-side reveal">
-        <div class="discord-embed-card">
-          <span class="embed-rail" aria-hidden="true"></span>
-          <div class="embed-body">
-            <strong><%= safeEmbedTitle %></strong>
-            <p><%= safeEmbedDescription %></p>
-            <% if (safeUploadLink && isImage) { %>
-              <img src="<%= safeUploadLink %>" alt="Discord-style preview image" class="embed-image-real">
-            <% } else { %>
-              <div class="embed-image-sample file-sample"></div>
-            <% } %>
-            <code><%= safeShortLink %></code>
-          </div>
-        </div>
-
-        <div class="qr-card">
-          <div class="qr-placeholder" data-qr-placeholder data-qr-value="<%= safeShortLink %>" aria-hidden="true"></div>
           <div>
-            <strong>Short link handoff</strong>
-            <p>Clean structure is ready for a real QR library when one is added.</p>
+            <% if (safeShortLink) { %>
+              <div class="copy-block">
+                <label>Branded Short Link</label>
+                <div class="copy-field">
+                  <input type="text" value="<%= safeShortLink %>" readonly id="success-short-link">
+                  <button class="icon-button copy-icon" type="button" data-copy-button data-copy-value="<%= safeShortLink %>" data-copy-label="Copied short link" aria-label="Copy short link">
+                    <i class="bi bi-copy" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
+            <% } %>
+
+            <% if (safeFileLink) { %>
+              <div class="copy-block">
+                <label>Discord Embed Route</label>
+                <div class="copy-field">
+                  <input type="text" value="<%= safeFileLink %>" readonly id="success-file-link">
+                  <button class="icon-button copy-icon" type="button" data-copy-button data-copy-value="<%= safeFileLink %>" data-copy-label="Copied embed link" aria-label="Copy embed link">
+                    <i class="bi bi-copy" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
+            <% } %>
+
+            <% if (safeUploadLink) { %>
+              <div class="copy-block">
+                <label>Direct Asset URL</label>
+                <div class="copy-field">
+                  <input type="text" value="<%= safeUploadLink %>" readonly id="success-upload-link">
+                  <button class="icon-button copy-icon" type="button" data-copy-button data-copy-value="<%= safeUploadLink %>" data-copy-label="Copied direct URL" aria-label="Copy direct URL">
+                    <i class="bi bi-copy" aria-hidden="true"></i>
+                  </button>
+                </div>
+              </div>
+            <% } %>
           </div>
-          <!-- TODO: Replace the deterministic placeholder with a real QR generator if a lightweight client library is added. -->
+
+          <!-- QR Code Preview Box -->
+          <div class="qr-card">
+            <div class="qr-placeholder" data-qr-placeholder data-qr-value="<%= safeShortLink || safeFileLink %>" aria-label="Algorithmic QR code pattern"></div>
+            <div>
+              <strong>Quick Share</strong>
+              <p style="margin: 0; font-size: 0.82rem; color: var(--muted);">Scan or copy to open instantly on mobile devices.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-actions">
+          <% if (safeFileLink) { %>
+            <a class="button button-accent" href="<%= safeFileLink %>" target="_blank" rel="noreferrer">
+              <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+              <span>Open Embed View</span>
+            </a>
+          <% } %>
+          <a class="button button-secondary" href="/#upload">
+            <i class="bi bi-plus-circle" aria-hidden="true"></i>
+            <span>Upload Another File</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- Sidebar Media Preview -->
+      <aside class="result-side" aria-label="Uploaded Asset Preview">
+        <div style="padding: 24px;">
+          <span class="eyebrow eyebrow-accent">Live Preview</span>
+          <h3><%= safeTitle %></h3>
+          <p style="font-size: 0.88rem;"><%= safeDescription %></p>
+
+          <% if (isImage && safeUploadLink) { %>
+            <img class="uploaded-preview" src="<%= safeUploadLink %>" alt="<%= safeOriginalName %>" loading="lazy">
+          <% } else if (isVideo && safeUploadLink) { %>
+            <video class="uploaded-preview" controls autoplay muted loop playsinline>
+              <source src="<%= safeUploadLink %>">
+            </video>
+          <% } else if (isAudio && safeUploadLink) { %>
+            <div class="file-placeholder">
+              <i class="bi bi-file-earmark-music" aria-hidden="true"></i>
+              <strong><%= safeOriginalName %></strong>
+              <audio class="hosted-audio-player" controls preload="metadata">
+                <source src="<%= safeUploadLink %>">
+              </audio>
+            </div>
+          <% } else { %>
+            <div class="file-placeholder">
+              <i class="bi bi-file-earmark-check" aria-hidden="true"></i>
+              <strong><%= safeOriginalName %></strong>
+              <span><%= safeFileSize %></span>
+            </div>
+          <% } %>
+
+          <div style="margin-top: 18px; display: grid; gap: 8px;">
+            <button class="button button-quiet button-full" type="button" data-copy-button data-copy-value="<%= safeShortLink || safeFileLink %>" data-copy-label="Copied link">
+              <i class="bi bi-clipboard" aria-hidden="true"></i>
+              <span>Copy Primary Link</span>
+            </button>
+          </div>
         </div>
       </aside>
-    </section>
+    </div>
   </main>
 
-  <script>
-    if (window.history.replaceState) {
-      window.history.replaceState(null, null, window.location.href);
-    }
-  </script>
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <a class="brand-mark" href="/">
+        <span class="brand-copy">
+          <strong><%= safeAppName %></strong>
+          <small>Upload once. Share everywhere.</small>
+        </span>
+      </a>
+
+      <nav class="site-nav footer-doc-links" aria-label="Footer links">
+        <a href="/">Home</a>
+        <a href="/#upload">Upload</a>
+        <a href="/api-docs">API Docs</a>
+      </nav>
+    </div>
+  </footer>
+
   <script src="/assets/js/main.js"></script>
 </body>
 

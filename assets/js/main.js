@@ -1,8 +1,15 @@
+/**
+ * EmbedCDN - Client-Side Micro-Interactions & UX Engine
+ * Vanilla ES6+ - Zero Dependencies
+ */
+
 (function () {
   "use strict";
 
   const body = document.body;
   const root = document.documentElement;
+
+  // DOM Elements
   const navToggle = document.querySelector("[data-nav-toggle]");
   const navPanel = document.querySelector("[data-nav-panel]");
   const uploadForm = document.querySelector("[data-upload-form]");
@@ -22,31 +29,36 @@
   const formError = document.querySelector("[data-form-error]");
   const revealItems = document.querySelectorAll(".reveal");
   const resultData = document.querySelector("[data-upload-result]");
+
+  // Constants
   const RECENT_KEY = "embedcdn:recent-uploads";
   const DOCS_LAST_SHORT_KEY = "embedcdn:docs-last-short-link";
+  const MAX_RECOMMENDED_SIZE = 25 * 1024 * 1024; // 25 MB (Standard Discord preview limit)
 
   let activeObjectUrl = "";
 
+  /**
+   * Human-readable byte formatting
+   */
   const formatBytes = function (bytes) {
-    if (!Number.isFinite(bytes)) {
-      return "Unknown size";
+    if (!Number.isFinite(bytes) || bytes < 0) {
+      return "0 B";
     }
-
     if (bytes >= 1e9) {
       return (bytes / 1e9).toFixed(2) + " GB";
     }
-
     if (bytes >= 1e6) {
       return (bytes / 1e6).toFixed(2) + " MB";
     }
-
     if (bytes >= 1000) {
       return Math.round(bytes / 1000) + " KB";
     }
-
     return bytes + " B";
   };
 
+  /**
+   * Slugify string for branded URLs
+   */
   const slugify = function (value) {
     return String(value || "")
       .trim()
@@ -57,23 +69,43 @@
       .slice(0, 40);
   };
 
+  /**
+   * Get application short base URL
+   */
   const getShortBase = function () {
     const slugPrefix = document.querySelector(".slug-input-wrap span");
-
     if (slugPrefix && slugPrefix.textContent) {
       return slugPrefix.textContent.replace(/\/s\/?$/, "");
     }
-
     const current = window.location.origin;
     return current === "null" ? "https://yourdomain.com" : current;
   };
 
+  /**
+   * Set text content across multiple selector targets
+   */
   const setText = function (selector, value) {
     document.querySelectorAll(selector).forEach(function (element) {
       element.textContent = value;
     });
   };
 
+  /**
+   * Trigger subtle device haptics when supported
+   */
+  const triggerHaptic = function (pattern) {
+    try {
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate(pattern || [15, 30]);
+      }
+    } catch {
+      // Ignore vibration errors on unsupported environments
+    }
+  };
+
+  /**
+   * Display dynamic slide-in toast notifications
+   */
   const showToast = function (message, type) {
     let stack = document.querySelector("[data-toast-stack]");
 
@@ -87,7 +119,7 @@
     }
 
     const toast = document.createElement("div");
-    toast.className = "toast";
+    toast.className = "toast" + (type === "error" ? " is-error" : "");
     toast.innerHTML =
       '<i class="bi ' +
       (type === "error" ? "bi-exclamation-triangle" : "bi-check2-circle") +
@@ -103,6 +135,9 @@
     }, 3200);
   };
 
+  /**
+   * Copy string to clipboard with visual & haptic feedback
+   */
   const copyText = async function (value, label) {
     if (!value) {
       showToast("Nothing to copy yet", "error");
@@ -121,6 +156,7 @@
         tempInput.remove();
       }
 
+      triggerHaptic([20]);
       showToast(label || "Copied to clipboard");
       return true;
     } catch (error) {
@@ -129,24 +165,26 @@
     }
   };
 
+  /**
+   * Extract text value from targeted element
+   */
   const copyValueFromTarget = function (selector) {
     if (!selector) {
       return "";
     }
-
     const target = document.querySelector(selector);
-
     if (!target) {
       return "";
     }
-
     if (typeof target.value === "string") {
       return target.value;
     }
-
     return target.textContent || "";
   };
 
+  /**
+   * Recent Uploads Storage Management
+   */
   const getRecentUploads = function () {
     try {
       return JSON.parse(localStorage.getItem(RECENT_KEY) || "[]");
@@ -156,11 +194,15 @@
   };
 
   const saveRecentUploads = function (items) {
-    localStorage.setItem(RECENT_KEY, JSON.stringify(items.slice(0, 5)));
+    try {
+      localStorage.setItem(RECENT_KEY, JSON.stringify(items.slice(0, 8)));
+    } catch {
+      // Storage quota exceeded or disabled
+    }
   };
 
   const addRecentUpload = function (item) {
-    if (!item.shortLink && !item.embedLink) {
+    if (!item.shortLink && !item.embedLink && !item.directLink) {
       return;
     }
 
@@ -183,9 +225,12 @@
 
   const latestLink = function () {
     const recent = getRecentUploads();
-    return recent.length ? recent[0].shortLink || recent[0].embedLink : "";
+    return recent.length ? recent[0].shortLink || recent[0].embedLink || recent[0].directLink : "";
   };
 
+  /**
+   * Update live preview images across mockups
+   */
   const updatePreviewImages = function (url, isImage) {
     document.querySelectorAll("[data-preview-image]").forEach(function (element) {
       if (isImage && url) {
@@ -198,6 +243,9 @@
     });
   };
 
+  /**
+   * Synchronize all platform live previews (Discord, X/Twitter, WhatsApp)
+   */
   const updateLivePreview = function () {
     const selectedFile = fileInput && fileInput.files && fileInput.files[0];
     const title =
@@ -217,6 +265,9 @@
     setText("[data-preview-file-link]", fileUrl);
   };
 
+  /**
+   * Validate custom slug input in real time
+   */
   const validateSlug = function () {
     if (!slugInput || !slugHelp) {
       return true;
@@ -240,7 +291,7 @@
 
     if (!valid) {
       slugHelp.textContent =
-        "Use 3-40 lowercase letters, numbers, and hyphens. No spaces.";
+        "Use 3-40 lowercase letters, numbers, and hyphens. No leading or trailing hyphens.";
       slugHelp.classList.add("is-error");
       updateLivePreview();
       return false;
@@ -252,6 +303,38 @@
     return true;
   };
 
+  /**
+   * Determine file category icon
+   */
+  const getFileIconClass = function (file) {
+    if (!file) return "bi-file-earmark";
+    const type = file.type || "";
+    const name = file.name.toLowerCase();
+
+    if (type.startsWith("image/") || /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/.test(name)) {
+      return "bi-file-earmark-image";
+    }
+    if (type.startsWith("video/") || /\.(mp4|webm|mov|m4v|mkv)$/.test(name)) {
+      return "bi-file-earmark-play";
+    }
+    if (type.startsWith("audio/") || /\.(mp3|ogg|wav|m4a|flac|aac)$/.test(name)) {
+      return "bi-file-earmark-music";
+    }
+    if (type === "application/pdf" || name.endsWith(".pdf")) {
+      return "bi-file-earmark-pdf";
+    }
+    if (/\.(zip|tar|gz|rar|7z)$/.test(name)) {
+      return "bi-file-earmark-zip";
+    }
+    if (/\.(js|ts|json|html|css|py|go|rs|c|cpp|java|php)$/.test(name)) {
+      return "bi-file-earmark-code";
+    }
+    return "bi-file-earmark";
+  };
+
+  /**
+   * Update file selection state & previews
+   */
   const updateFileState = function () {
     if (!fileInput) {
       return;
@@ -288,6 +371,13 @@
     }
     if (selectedSize) {
       selectedSize.textContent = formatBytes(file.size);
+      if (file.size > MAX_RECOMMENDED_SIZE) {
+        selectedSize.classList.add("is-warning");
+        selectedSize.title = "File exceeds 25 MB. Discord may not render rich inline video.";
+      } else {
+        selectedSize.classList.remove("is-warning");
+        selectedSize.removeAttribute("title");
+      }
     }
     if (fileCard) {
       fileCard.classList.remove("is-hidden");
@@ -297,6 +387,14 @@
     }
 
     const isImage = file.type && file.type.indexOf("image/") === 0;
+
+    // Update thumbnail icon or image preview
+    if (fileThumb) {
+      const iconEl = fileThumb.querySelector("i");
+      if (iconEl) {
+        iconEl.className = "bi " + getFileIconClass(file);
+      }
+    }
 
     if (isImage) {
       activeObjectUrl = URL.createObjectURL(file);
@@ -322,6 +420,9 @@
     updateLivePreview();
   };
 
+  /**
+   * Render algorithmic QR placeholder matrix
+   */
   const renderQrPlaceholder = function () {
     document.querySelectorAll("[data-qr-placeholder]").forEach(function (qr) {
       const value = qr.getAttribute("data-qr-value") || "embedcdn";
@@ -348,6 +449,9 @@
     });
   };
 
+  /**
+   * Render Recent Uploads Drawer Modal
+   */
   const renderRecentPanel = function () {
     let overlay = document.querySelector("[data-recent-overlay]");
 
@@ -382,7 +486,7 @@
 
     if (!items.length) {
       list.innerHTML =
-        '<div class="empty-state">No recent uploads yet. Your next success page will land here.</div>';
+        '<div class="empty-state">No recent uploads yet. Your uploads will be remembered here.</div>';
       return overlay;
     }
 
@@ -397,7 +501,7 @@
         '<a class="icon-button" target="_blank" rel="noreferrer" aria-label="Open link"><i class="bi bi-box-arrow-up-right" aria-hidden="true"></i></a>' +
         "</div>";
       row.querySelector("strong").textContent = item.fileName || "Hosted file";
-      row.querySelector("code").textContent = item.shortLink || item.embedLink || "";
+      row.querySelector("code").textContent = item.shortLink || item.embedLink || item.directLink || "";
       row.querySelector("[data-copy-short]").addEventListener("click", function () {
         copyText(item.shortLink || item.embedLink, "Copied short link");
       });
@@ -420,6 +524,7 @@
     }
   };
 
+  // Mobile Navigation Toggle
   if (navToggle && navPanel) {
     navToggle.addEventListener("click", function () {
       const isOpen = body.classList.toggle("nav-open");
@@ -434,6 +539,7 @@
     });
   }
 
+  // Drag & Drop Upload Zone Handling
   if (uploadZone && fileInput) {
     ["dragenter", "dragover"].forEach(function (eventName) {
       uploadZone.addEventListener(eventName, function (event) {
@@ -453,6 +559,7 @@
       if (event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files.length) {
         fileInput.files = event.dataTransfer.files;
         updateFileState();
+        triggerHaptic([15]);
         showToast("File staged for upload");
       }
     });
@@ -467,6 +574,7 @@
     fileInput.addEventListener("change", updateFileState);
   }
 
+  // Real-time Inputs Event Listeners
   if (titleInput) {
     titleInput.addEventListener("input", updateLivePreview);
   }
@@ -479,6 +587,7 @@
     slugInput.addEventListener("input", validateSlug);
   }
 
+  // Upload Form Submission Handler
   if (uploadForm && submitButton) {
     uploadForm.addEventListener("submit", function (event) {
       const hasFile = fileInput && fileInput.files && fileInput.files.length;
@@ -489,20 +598,22 @@
         if (formError) {
           formError.classList.remove("is-hidden");
           formError.querySelector("span").textContent = !hasFile
-            ? "No file selected. Tiny link. Big preview. We still need the file."
-            : "Custom slug needs a quick cleanup before upload.";
+            ? "No file selected. Please choose or drop a file to upload."
+            : "Custom slug is invalid. Use 3-40 lowercase letters, numbers, and hyphens.";
         }
-        showToast(!hasFile ? "Invalid file" : "Slug unavailable", "error");
+        triggerHaptic([40, 50, 40]);
+        showToast(!hasFile ? "Please select a file" : "Slug is invalid", "error");
         return;
       }
 
       uploadForm.classList.add("is-submitting");
       submitButton.setAttribute("aria-busy", "true");
       submitButton.disabled = true;
-      showToast("Upload started");
+      showToast("Uploading media...");
     });
   }
 
+  // One-Click Copy Triggers
   document.querySelectorAll("[data-copy-button]").forEach(function (button) {
     button.addEventListener("click", async function () {
       const didCopy = await copyText(
@@ -511,31 +622,68 @@
       );
 
       if (didCopy) {
+        const icon = button.querySelector("i");
+        const originalClass = icon ? icon.className : "";
         button.classList.add("is-copied");
+        if (icon) {
+          icon.className = "bi bi-check2";
+        }
         window.setTimeout(function () {
           button.classList.remove("is-copied");
-        }, 1400);
+          if (icon) {
+            icon.className = originalClass;
+          }
+        }, 1600);
       }
     });
   });
 
   document.querySelectorAll("[data-copy-source]").forEach(function (button) {
-    button.addEventListener("click", function () {
+    button.addEventListener("click", async function () {
       const sourceId = button.getAttribute("data-copy-source");
       const source = sourceId ? document.getElementById(sourceId) : null;
-      copyText(source ? source.textContent : "", "Copied code sample");
+      const didCopy = await copyText(source ? source.textContent : "", "Copied code sample");
+      if (didCopy) {
+        const icon = button.querySelector("i");
+        const originalClass = icon ? icon.className : "";
+        button.classList.add("is-copied");
+        if (icon) {
+          icon.className = "bi bi-check2";
+        }
+        window.setTimeout(function () {
+          button.classList.remove("is-copied");
+          if (icon) {
+            icon.className = originalClass;
+          }
+        }, 1600);
+      }
     });
   });
 
   document.querySelectorAll("[data-copy-target]").forEach(function (button) {
-    button.addEventListener("click", function () {
-      copyText(
+    button.addEventListener("click", async function () {
+      const didCopy = await copyText(
         copyValueFromTarget(button.getAttribute("data-copy-target")),
         button.getAttribute("data-copy-label") || "Copied value"
       );
+      if (didCopy) {
+        const icon = button.querySelector("i");
+        const originalClass = icon ? icon.className : "";
+        button.classList.add("is-copied");
+        if (icon) {
+          icon.className = "bi bi-check2";
+        }
+        window.setTimeout(function () {
+          button.classList.remove("is-copied");
+          if (icon) {
+            icon.className = originalClass;
+          }
+        }, 1600);
+      }
     });
   });
 
+  // Platform Preview Tabs Switcher
   document.querySelectorAll("[data-preview-tabs]").forEach(function (tabs) {
     tabs.addEventListener("click", function (event) {
       const button = event.target.closest("[data-preview-tab]");
@@ -560,10 +708,10 @@
     });
   });
 
+  // API Documentation Language Tabs
   document.querySelectorAll("[data-doc-lang-tabs]").forEach(function (tabs) {
     tabs.addEventListener("click", function (event) {
       const button = event.target.closest("[data-doc-lang]");
-
       if (!button) {
         return;
       }
@@ -585,6 +733,7 @@
     });
   });
 
+  // Quick Action Triggers
   document.querySelectorAll("[data-open-recent]").forEach(function (button) {
     button.addEventListener("click", openRecentPanel);
   });
@@ -595,6 +744,7 @@
     });
   });
 
+  // Interactive API Tester
   document.querySelectorAll("[data-api-tester]").forEach(function (form) {
     const endpoint = form.getAttribute("data-endpoint") || "/api/upload";
     const tokenInput = form.querySelector("[data-api-token-input]");
@@ -612,7 +762,6 @@
       if (!statusEl) {
         return;
       }
-
       statusEl.textContent = text;
       statusEl.className = "result-pill" + (state ? " is-" + state : "");
     };
@@ -631,17 +780,16 @@
       if (fileLinkEl) {
         fileLinkEl.value = fileLink;
       }
-
       if (shortLinkEl) {
         shortLinkEl.value = shortLink;
       }
-
       if (linksEl) {
         linksEl.classList.toggle("is-hidden", !fileLink && !shortLink);
       }
-
       if (shortLink) {
-        localStorage.setItem(DOCS_LAST_SHORT_KEY, shortLink);
+        try {
+          localStorage.setItem(DOCS_LAST_SHORT_KEY, shortLink);
+        } catch {}
       }
     };
 
@@ -677,7 +825,6 @@
       if (submit) {
         submit.disabled = true;
       }
-
       if (submitLabel) {
         submitLabel.textContent = "Uploading...";
       }
@@ -726,7 +873,6 @@
         if (submit) {
           submit.disabled = false;
         }
-
         if (submitLabel) {
           submitLabel.textContent = "Test Upload";
         }
@@ -734,6 +880,7 @@
     });
   });
 
+  // Interactive Health Checker
   document.querySelectorAll("[data-api-health-check]").forEach(function (button) {
     const endpoint = button.getAttribute("data-endpoint") || "/api/health";
     const statusEl = document.querySelector("[data-api-health-status]");
@@ -780,15 +927,12 @@
         if (statusEl) {
           statusEl.textContent = "Offline";
         }
-
         if (latencyEl) {
           latencyEl.textContent = "Request failed";
         }
-
         if (timeEl) {
           timeEl.textContent = "No response";
         }
-
         if (jsonEl) {
           jsonEl.textContent = JSON.stringify(
             { error: error && error.message ? error.message : "Health check failed." },
@@ -796,7 +940,6 @@
             2
           );
         }
-
         showToast("API health check failed", "error");
       } finally {
         button.disabled = false;
@@ -804,6 +947,7 @@
     });
   });
 
+  // Global Keyboard Shortcuts
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") {
       const recent = document.querySelector("[data-recent-overlay]");
@@ -813,6 +957,7 @@
     }
   });
 
+  // Dismiss Card Animation
   document.querySelectorAll("[data-dismiss-card]").forEach(function (button) {
     button.addEventListener("click", function () {
       const card = button.closest(".success-modal");
@@ -825,6 +970,7 @@
     });
   });
 
+  // Post-Upload Auto Registration in Recent Uploads
   if (resultData) {
     addRecentUpload({
       fileName: resultData.getAttribute("data-file-name"),
@@ -834,11 +980,13 @@
     });
   }
 
+  // Initial Form Error Toast
   if (formError && !formError.classList.contains("is-hidden")) {
     const message = formError.textContent.trim();
     showToast(message || "Upload failed", "error");
   }
 
+  // Scroll Reveal Observer
   if ("IntersectionObserver" in window && revealItems.length) {
     const observer = new IntersectionObserver(
       function (entries) {
@@ -849,7 +997,7 @@
           }
         });
       },
-      { threshold: 0.14 }
+      { threshold: 0.12 }
     );
 
     revealItems.forEach(function (item) {
@@ -861,6 +1009,7 @@
     });
   }
 
+  // Initialize Page State
   validateSlug();
   updateLivePreview();
   renderQrPlaceholder();

@@ -1,163 +1,245 @@
+<%
+  const safeAppName = (typeof appName === 'string' && appName) ? appName : 'EmbedCDN';
+  const safeFavicon = (typeof appFavicon === 'string' && appFavicon) ? appFavicon : '/assets/logo.ico';
+  const safeBaseUrl = (typeof appBaseUrl === 'string' && appBaseUrl) ? appBaseUrl.replace(/\/$/, '') : '';
+  const safeImageDirectLink = (typeof imageDirectLink === 'string' && imageDirectLink) ? imageDirectLink : '';
+  const safeFileLink = (typeof fileLink === 'string' && fileLink) ? fileLink : safeImageDirectLink;
+  const safeShortLink = (typeof shortLink === 'string' && shortLink) ? shortLink : '';
+  const safeShortCode = (typeof shortCode === 'string' && shortCode) ? shortCode : '';
+  const safeFileName = (typeof fileName === 'string' && fileName) ? fileName : 'file';
+  const safeOriginalName = (typeof originalName === 'string' && originalName) ? originalName : safeFileName;
+  const safeFileSize = (typeof fileSize === 'string' && fileSize) ? fileSize : 'Hosted file';
+  const safeTitle = (typeof title === 'string' && title) ? title : safeOriginalName;
+  const safeDescription = (typeof description === 'string' && description) ? description : 'Hosted via ' + safeAppName;
+  const safeClicks = (typeof clicks === 'number' && Number.isFinite(clicks)) ? clicks : 0;
+  const safeViews = (typeof views === 'number' && Number.isFinite(views)) ? views : 0;
+  const targetUrl = safeFileLink || safeImageDirectLink;
+
+  // Media Type Detection for Discord Embeds & Rich Previews
+  const lowerName = (safeOriginalName || safeFileName || '').toLowerCase();
+  const isImage = /\.(png|jpe?g|gif|webp|svg|avif|bmp)$/.test(lowerName);
+  const isVideo = /\.(mp4|webm|mov|m4v|ogv)$/.test(lowerName);
+  const isAudio = /\.(mp3|ogg|wav|m4a|flac|aac)$/.test(lowerName);
+
+  let ogType = 'website';
+  let videoMime = 'video/mp4';
+  let audioMime = 'audio/mpeg';
+
+  if (isVideo) {
+    ogType = 'video.other';
+    if (lowerName.endsWith('.webm')) videoMime = 'video/webm';
+    else if (lowerName.endsWith('.mov')) videoMime = 'video/quicktime';
+    else if (lowerName.endsWith('.ogv')) videoMime = 'video/ogg';
+  } else if (isAudio) {
+    ogType = 'music.song';
+    if (lowerName.endsWith('.ogg')) audioMime = 'audio/ogg';
+    else if (lowerName.endsWith('.wav')) audioMime = 'audio/wav';
+    else if (lowerName.endsWith('.m4a')) audioMime = 'audio/mp4';
+  }
+%>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <% const safeAppName = typeof appName !== "undefined" && appName ? appName : "EmbedCDN"; %>
-  <% const safeTitle = typeof title !== "undefined" && title ? title : "EmbedCDN Preview"; %>
-  <% const safeDescription = typeof description !== "undefined" && description ? description : "Previewing hosted content."; %>
-  <% const safeImageDirectLink = typeof imageDirectLink !== "undefined" && imageDirectLink ? imageDirectLink : ""; %>
-  <% const safeFileLink = typeof fileLink !== "undefined" && fileLink ? fileLink : ""; %>
-  <% const safeShortLink = typeof shortLink !== "undefined" && shortLink ? shortLink : ""; %>
-  <% const safeFileName = typeof fileName !== "undefined" && fileName ? fileName : "Hosted file"; %>
-  <% const safeOriginalName = typeof originalName !== "undefined" && originalName ? originalName : safeFileName; %>
-  <% const safeFileSize = typeof fileSize !== "undefined" && fileSize ? fileSize : "Stored asset"; %>
-  <% const safeViews = typeof views !== "undefined" ? views : 0; %>
-  <% const safeClicks = typeof clicks !== "undefined" ? clicks : 0; %>
-  <% const isImage = safeImageDirectLink && /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i.test(safeImageDirectLink); %>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= safeTitle %></title>
-  <meta name="title" content="<%= safeTitle %>">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title><%= safeTitle %> &mdash; <%= safeAppName %></title>
   <meta name="description" content="<%= safeDescription %>">
 
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="<%= safeFileLink || safeImageDirectLink %>">
-  <meta property="og:title" content="<%= safeTitle %>">
-  <meta property="og:description" content="<%= safeDescription %>">
-  <meta property="og:image" content="<%= safeImageDirectLink %>">
-
-  <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:url" content="<%= safeFileLink || safeImageDirectLink %>">
-  <meta property="twitter:title" content="<%= safeTitle %>">
-  <meta property="twitter:description" content="<%= safeDescription %>">
-  <meta property="twitter:image" content="<%= safeImageDirectLink %>">
-
-  <link rel="canonical" href="<%= safeShortLink || safeFileLink %>">
+  <!-- Preconnect & Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link href="/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="/assets/css/style.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/x-icon" href="<%= safeFavicon %>">
+  <link rel="canonical" href="<%= targetUrl %>">
+
+  <!-- Discord & Open Graph Social Embed Metadata -->
+  <meta property="og:site_name" content="<%= safeAppName %>">
+  <meta property="og:type" content="<%= ogType %>">
+  <meta property="og:url" content="<%= targetUrl %>">
+  <meta property="og:title" content="<%= safeTitle %>">
+  <meta property="og:description" content="<%= safeDescription %>">
+  <meta name="theme-color" content="#ffb454">
+
+  <% if (isImage && safeImageDirectLink) { %>
+    <meta property="og:image" content="<%= safeImageDirectLink %>">
+    <meta property="og:image:alt" content="<%= safeTitle %>">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="<%= safeImageDirectLink %>">
+  <% } else if (isVideo && safeImageDirectLink) { %>
+    <meta property="og:video" content="<%= safeImageDirectLink %>">
+    <meta property="og:video:url" content="<%= safeImageDirectLink %>">
+    <meta property="og:video:secure_url" content="<%= safeImageDirectLink %>">
+    <meta property="og:video:type" content="<%= videoMime %>">
+    <meta name="twitter:card" content="player">
+    <meta name="twitter:player" content="<%= targetUrl %>">
+  <% } else if (isAudio && safeImageDirectLink) { %>
+    <meta property="og:audio" content="<%= safeImageDirectLink %>">
+    <meta property="og:audio:secure_url" content="<%= safeImageDirectLink %>">
+    <meta property="og:audio:type" content="<%= audioMime %>">
+    <meta name="twitter:card" content="summary">
+  <% } else { %>
+    <meta name="twitter:card" content="summary">
+  <% } %>
+
+  <meta name="twitter:title" content="<%= safeTitle %>">
+  <meta name="twitter:description" content="<%= safeDescription %>">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/assets/vendor/bootstrap-icons/bootstrap-icons.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 
-<body class="product-shell display-page" data-page="display">
+<body>
   <div class="texture-layer" aria-hidden="true"></div>
 
   <header class="site-header">
     <div class="container nav-shell">
-      <a class="brand-mark" href="/" aria-label="<%= safeAppName %> home">
+      <a class="brand-mark" href="/" aria-label="<%= safeAppName %> Home">
         <span class="brand-copy">
           <strong><%= safeAppName %></strong>
-          <small>File preview</small>
+          <small>Fast Media Delivery</small>
         </span>
       </a>
 
-      <nav class="site-nav site-nav-inline" aria-label="Preview navigation">
-        <a href="/">Upload</a>
-        <a href="<%= safeImageDirectLink %>" target="_blank" rel="noreferrer">Direct file</a>
-      </nav>
+      <div class="site-nav-inline">
+        <a class="button button-primary" href="/#upload">
+          <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+          <span>Upload File</span>
+        </a>
+      </div>
     </div>
   </header>
 
   <main class="display-stage">
-    <section class="container display-grid" data-upload-result data-file-name="<%= safeOriginalName %>" data-embed-link="<%= safeFileLink %>" data-short-link="<%= safeShortLink %>" data-direct-link="<%= safeImageDirectLink %>">
-      <article class="display-copy reveal">
-        <span class="eyebrow">Hosted preview</span>
+    <div class="container display-grid">
+      <!-- Media Player & Preview Panel -->
+      <section class="display-media" aria-label="Media Preview">
+        <% if (isImage && safeImageDirectLink) { %>
+          <img class="hosted-media" src="<%= safeImageDirectLink %>" alt="<%= safeOriginalName %>" loading="eager">
+        <% } else if (isVideo && safeImageDirectLink) { %>
+          <video class="hosted-media" controls autoplay muted loop playsinline>
+            <source src="<%= safeImageDirectLink %>" type="<%= videoMime %>">
+            Your browser does not support HTML5 video playback.
+          </video>
+        <% } else if (isAudio && safeImageDirectLink) { %>
+          <div class="file-placeholder large-placeholder">
+            <i class="bi bi-file-earmark-music" aria-hidden="true"></i>
+            <strong><%= safeOriginalName %></strong>
+            <span>Audio stream</span>
+            <audio class="hosted-audio-player" controls preload="metadata">
+              <source src="<%= safeImageDirectLink %>" type="<%= audioMime %>">
+              Your browser does not support HTML5 audio playback.
+            </audio>
+          </div>
+        <% } else { %>
+          <div class="file-placeholder large-placeholder">
+            <i class="bi bi-file-earmark-arrow-down" aria-hidden="true"></i>
+            <strong><%= safeOriginalName %></strong>
+            <span>Non-previewable binary asset (<%= safeFileSize %>)</span>
+          </div>
+        <% } %>
+
+        <div class="result-actions" style="margin-top: 10px;">
+          <% if (safeImageDirectLink) { %>
+            <a class="button button-accent" href="<%= safeImageDirectLink %>" target="_blank" rel="noreferrer" download="<%= safeOriginalName %>">
+              <i class="bi bi-download" aria-hidden="true"></i>
+              <span>Download Original (<%= safeFileSize %>)</span>
+            </a>
+          <% } %>
+          <% if (safeShortLink) { %>
+            <button class="button button-secondary" type="button" data-copy-button data-copy-value="<%= safeShortLink %>" data-copy-label="Copied short link">
+              <i class="bi bi-link-45deg" aria-hidden="true"></i>
+              <span>Copy Short URL</span>
+            </button>
+          <% } %>
+        </div>
+      </section>
+
+      <!-- Details & Sharing Metadata Panel -->
+      <article class="display-copy">
+        <span class="eyebrow">Hosted Asset</span>
         <h1><%= safeTitle %></h1>
         <p><%= safeDescription %></p>
 
-        <div class="stat-strip">
+        <!-- Stats Strip -->
+        <div class="stat-strip" aria-label="Asset Statistics">
           <div>
-            <small>File</small>
-            <strong><%= safeOriginalName %></strong>
+            <small>Filename</small>
+            <strong title="<%= safeOriginalName %>"><%= safeOriginalName %></strong>
           </div>
           <div>
             <small>Size</small>
             <strong><%= safeFileSize %></strong>
           </div>
           <div>
-            <small>Views</small>
+            <small>Embed Views</small>
             <strong><%= safeViews %></strong>
           </div>
           <div>
-            <small>Short clicks</small>
+            <small>Short Clicks</small>
             <strong><%= safeClicks %></strong>
           </div>
         </div>
 
-        <div class="copy-block">
-          <label>Canonical short link</label>
-          <div class="copy-field">
-            <input type="text" value="<%= safeShortLink %>" readonly>
-            <button class="icon-button copy-icon" type="button" data-copy-button data-copy-value="<%= safeShortLink %>" data-copy-label="Copied short link">
-              <i class="bi bi-copy" aria-hidden="true"></i>
-              <span class="sr-only">Copy short link</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="copy-block">
-          <label>Discord embed link</label>
-          <div class="copy-field">
-            <input type="text" value="<%= safeFileLink %>" readonly>
-            <button class="icon-button copy-icon" type="button" data-copy-button data-copy-value="<%= safeFileLink %>" data-copy-label="Copied embed link">
-              <i class="bi bi-copy" aria-hidden="true"></i>
-              <span class="sr-only">Copy embed link</span>
-            </button>
-          </div>
-        </div>
-      </article>
-
-      <aside class="display-media reveal">
-        <% if (isImage) { %>
-          <img src="<%= safeImageDirectLink %>" alt="<%= safeTitle %>" class="hosted-media">
-        <% } else { %>
-          <div class="file-placeholder large-placeholder">
-            <i class="bi bi-file-earmark-richtext" aria-hidden="true"></i>
-            <strong><%= safeOriginalName %></strong>
-            <span><%= safeFileSize %></span>
+        <!-- Quick Copy Blocks -->
+        <% if (safeShortLink) { %>
+          <div class="copy-block">
+            <label>Branded Short Link</label>
+            <div class="copy-field">
+              <input type="text" value="<%= safeShortLink %>" readonly id="display-short-link">
+              <button class="icon-button copy-icon" type="button" data-copy-button data-copy-value="<%= safeShortLink %>" data-copy-label="Copied short link" aria-label="Copy short link">
+                <i class="bi bi-copy" aria-hidden="true"></i>
+              </button>
+            </div>
           </div>
         <% } %>
 
-        <div class="preview-tabs compact-tabs" role="tablist" aria-label="Platform previews" data-preview-tabs>
-          <button class="is-active" type="button" role="tab" aria-selected="true" data-preview-tab="discord">Discord</button>
-          <button type="button" role="tab" aria-selected="false" data-preview-tab="twitter">X/Twitter</button>
-          <button type="button" role="tab" aria-selected="false" data-preview-tab="whatsapp">WhatsApp</button>
-        </div>
+        <% if (safeFileLink) { %>
+          <div class="copy-block">
+            <label>Discord Embed Route</label>
+            <div class="copy-field">
+              <input type="text" value="<%= safeFileLink %>" readonly id="display-file-link">
+              <button class="icon-button copy-icon" type="button" data-copy-button data-copy-value="<%= safeFileLink %>" data-copy-label="Copied embed link" aria-label="Copy embed link">
+                <i class="bi bi-copy" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+        <% } %>
 
-        <div class="platform-preview is-active" role="tabpanel" data-preview-panel="discord">
-          <div class="discord-embed-card">
-            <span class="embed-rail" aria-hidden="true"></span>
-            <div class="embed-body">
-              <strong><%= safeTitle %></strong>
-              <p><%= safeDescription %></p>
-              <code><%= safeShortLink %></code>
+        <% if (safeImageDirectLink) { %>
+          <div class="copy-block">
+            <label>Direct Asset URL</label>
+            <div class="copy-field">
+              <input type="text" value="<%= safeImageDirectLink %>" readonly id="display-direct-link">
+              <button class="icon-button copy-icon" type="button" data-copy-button data-copy-value="<%= safeImageDirectLink %>" data-copy-label="Copied direct URL" aria-label="Copy direct URL">
+                <i class="bi bi-copy" aria-hidden="true"></i>
+              </button>
             </div>
           </div>
-        </div>
-        <div class="platform-preview" role="tabpanel" data-preview-panel="twitter" hidden>
-          <div class="social-preview-card twitter-card">
-            <div class="social-image" <% if (isImage) { %>style="background-image:url('<%= safeImageDirectLink %>')" <% } %>></div>
-            <div>
-              <strong><%= safeTitle %></strong>
-              <p><%= safeDescription %></p>
-              <span><%= safeShortLink %></span>
-            </div>
-          </div>
-        </div>
-        <div class="platform-preview" role="tabpanel" data-preview-panel="whatsapp" hidden>
-          <div class="social-preview-card whatsapp-card">
-            <div class="social-image" <% if (isImage) { %>style="background-image:url('<%= safeImageDirectLink %>')" <% } %>></div>
-            <div>
-              <strong><%= safeTitle %></strong>
-              <p><%= safeDescription %></p>
-              <span><%= safeShortLink %></span>
-            </div>
-          </div>
-        </div>
-      </aside>
-    </section>
+        <% } %>
+      </article>
+    </div>
   </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <a class="brand-mark" href="/">
+        <span class="brand-copy">
+          <strong><%= safeAppName %></strong>
+          <small>Upload once. Share everywhere.</small>
+        </span>
+      </a>
+
+      <nav class="site-nav footer-doc-links" aria-label="Footer links">
+        <a href="/">Home</a>
+        <a href="/#upload">Upload</a>
+        <a href="/api-docs">API Docs</a>
+      </nav>
+    </div>
+  </footer>
 
   <script src="/assets/js/main.js"></script>
 </body>

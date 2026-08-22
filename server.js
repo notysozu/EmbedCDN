@@ -5,8 +5,11 @@ const cors = require("cors");
 const fileUpload = require("express-fileupload");
 const path = require("path");
 const fs = require("fs");
+const crypto = require("crypto");
+const helmet = require("helmet");
+const compression = require("compression");
+const { rateLimit } = require("express-rate-limit");
 const axios = require("axios");
-const bodyParser = require("body-parser");
 const { get, put } = require("@vercel/blob");
 
 const settings = require("./settings.json");
@@ -31,7 +34,8 @@ const linkedinInvite = settings.social.linkedin;
 const githubInvite =
   settings.social.github || "https://github.com/notysozu/EmbedCDN";
 
-const SHORT_LINKS_FILE = path.join(__dirname, "data", "short-links.json");
+const SHORT_LINKS_FILE =
+  process.env.SHORT_LINKS_FILE || path.join(__dirname, "data", "short-links.json");
 const SHORT_LINKS_BLOB_PATH = "data/short-links.json";
 const SHORT_CODE_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";
 const RESERVED_SHORT_SLUGS = new Set([
@@ -140,7 +144,11 @@ function encodeRoutePart(value) {
 }
 
 function getFirstUploadedFile(req) {
-  const uploadedFile = req.files && req.files.myFile;
+  if (!req.files) return null;
+  const uploadedFile =
+    req.files.myFile ||
+    req.files.file ||
+    (Object.keys(req.files).length > 0 ? req.files[Object.keys(req.files)[0]] : null);
   return Array.isArray(uploadedFile) ? uploadedFile[0] : uploadedFile;
 }
 
@@ -173,8 +181,90 @@ function cleanText(value, maxLength) {
     .slice(0, maxLength);
 }
 
+const MAX_FILE_SIZE_BYTES =
+  Number(process.env.MAX_FILE_SIZE_MB || 25) * 1024 * 1024;
+
+const DISALLOWED_EXTENSIONS = new Set([
+  "exe", "bat", "cmd", "sh", "bash", "ps1", "vbs", "js", "mjs", "cjs",
+  "php", "phtml", "php3", "php4", "php5", "phps", "pl", "py", "cgi",
+  "jar", "msi", "dll", "com", "scr", "html", "htm", "xhtml", "asp", "aspx", "jsp",
+  "wsf", "vbe", "jse", "reg", "hta", "cpl", "inf", "ins", "isp", "pif", "svgz",
+  "bin", "action", "apk", "app", "gadget", "workflow"
+]);
+
+const DISALLOWED_MIME_TYPES = new Set([
+  "text/html",
+  "text/javascript",
+  "application/javascript",
+  "application/x-javascript",
+  "application/x-msdownload",
+  "application/x-executable",
+  "application/x-sh",
+  "application/x-php",
+  "application/x-httpd-php",
+  "application/x-bat",
+  "application/x-csh",
+  "application/x-python"
+]);
+
+function isValidFileName(fileName) {
+  if (!fileName || typeof fileName !== "string") return false;
+  if (
+    fileName.includes("..") ||
+    fileName.includes("/") ||
+    fileName.includes("\\") ||
+    fileName.includes("\0")
+  ) {
+    return false;
+  }
+  return /^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/.test(fileName);
+}
+
+function validateUploadedFile(uploadedFile) {
+  if (!uploadedFile) {
+    return { valid: false, error: "No file provided." };
+  }
+
+  if (uploadedFile.size > MAX_FILE_SIZE_BYTES) {
+    const maxMb = Math.round(MAX_FILE_SIZE_BYTES / (1024 * 1024));
+    return {
+      valid: false,
+      error: `File size exceeds the limit of ${maxMb} MB.`,
+    };
+  }
+
+  const rawExt = path
+    .extname(uploadedFile.name || "")
+    .slice(1)
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+    .trim();
+
+  if (DISALLOWED_EXTENSIONS.has(rawExt)) {
+    return {
+      valid: false,
+      error: `Files with the extension '.${rawExt}' are not permitted.`,
+    };
+  }
+
+  const mime = String(uploadedFile.mimetype || "").toLowerCase().trim();
+  if (DISALLOWED_MIME_TYPES.has(mime)) {
+    return {
+      valid: false,
+      error: `Files with MIME type '${mime}' are not permitted.`,
+    };
+  }
+
+  return { valid: true };
+}
+
 function buildStoredFileName(originalName) {
-  const extension = path.extname(originalName || "").slice(1) || "bin";
+  const rawExt = path
+    .extname(originalName || "")
+    .slice(1)
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+  const extension = rawExt || "bin";
   return `${generateString(20)}.${extension}`;
 }
 
@@ -182,8 +272,8 @@ function blobPathFor(fileName) {
   return `uploads/${fileName}`;
 }
 
-function ensureUploadDirectory() {
-  fs.mkdirSync(path.join(__dirname, "public", "uploads"), { recursive: true });
+async function ensureUploadDirectory() {
+  await fs.promises.mkdir(path.join(__dirname, "public", "uploads"), { recursive: true });
 }
 
 function moveUploadedFile(uploadedFile, targetPath) {
@@ -205,25 +295,42 @@ async function saveUploadedFile(uploadedFile, storedFileName, req) {
     return blob.url;
   }
 
-  ensureUploadDirectory();
-  await moveUploadedFile(
-    uploadedFile,
-    path.join(__dirname, "public", "uploads", storedFileName)
-  );
+  await ensureUploadDirectory();
+  const uploadDir = path.resolve(__dirname, "public", "uploads");
+  const targetPath = path.resolve(uploadDir, storedFileName);
+
+  if (!targetPath.startsWith(uploadDir)) {
+    throw new Error("Invalid target file path");
+  }
+
+  await moveUploadedFile(uploadedFile, targetPath);
 
   return `${getBaseUrl(req)}/uploads/${encodeRoutePart(storedFileName)}`;
 }
 
 async function getStoredFileUrl(fileName, req) {
+  if (!isValidFileName(fileName)) {
+    return null;
+  }
+
   if (isBlobStorageEnabled()) {
     const blob = await get(blobPathFor(fileName), { access: "public" });
     return blob && blob.blob && blob.blob.url;
   }
 
-  const localPath = path.join(__dirname, "public", "uploads", fileName);
-  return fs.existsSync(localPath)
-    ? `${getBaseUrl(req)}/uploads/${encodeRoutePart(fileName)}`
-    : null;
+  const uploadDir = path.resolve(__dirname, "public", "uploads");
+  const localPath = path.resolve(uploadDir, fileName);
+
+  if (!localPath.startsWith(uploadDir)) {
+    return null;
+  }
+
+  try {
+    await fs.promises.stat(localPath);
+    return `${getBaseUrl(req)}/uploads/${encodeRoutePart(fileName)}`;
+  } catch {
+    return null;
+  }
 }
 
 function defaultShortLinkStore() {
@@ -301,11 +408,14 @@ async function loadShortLinks() {
         console.warn("Short link Blob store could not be loaded:", error.message);
       }
     }
-  } else if (fs.existsSync(SHORT_LINKS_FILE)) {
+  } else {
     try {
-      loadedStore = JSON.parse(fs.readFileSync(SHORT_LINKS_FILE, "utf8"));
+      const content = await fs.promises.readFile(SHORT_LINKS_FILE, "utf8");
+      loadedStore = JSON.parse(content);
     } catch (error) {
-      console.warn("Short link JSON store could not be loaded:", error.message);
+      if (error.code !== "ENOENT") {
+        console.warn("Short link JSON store could not be loaded:", error.message);
+      }
     }
   }
 
@@ -331,8 +441,8 @@ async function saveShortLinks(store) {
     return normalizedStore;
   }
 
-  fs.mkdirSync(path.dirname(SHORT_LINKS_FILE), { recursive: true });
-  fs.writeFileSync(SHORT_LINKS_FILE, body);
+  await fs.promises.mkdir(path.dirname(SHORT_LINKS_FILE), { recursive: true });
+  await fs.promises.writeFile(SHORT_LINKS_FILE, body, "utf8");
   return normalizedStore;
 }
 
@@ -586,12 +696,52 @@ function renderError(req, res, status = 404, extra = {}) {
   );
 }
 
+function isPrivateOrLoopbackHost(hostname) {
+  if (!hostname) return true;
+  const lowerHost = hostname.toLowerCase().trim();
+  if (
+    lowerHost === "localhost" ||
+    lowerHost === "127.0.0.1" ||
+    lowerHost === "0.0.0.0" ||
+    lowerHost === "::1" ||
+    lowerHost === "169.254.169.254" ||
+    lowerHost.endsWith(".localhost") ||
+    lowerHost.endsWith(".local") ||
+    lowerHost.endsWith(".internal") ||
+    lowerHost.endsWith(".onion")
+  ) {
+    return true;
+  }
+
+  const ipv4Match = lowerHost.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (ipv4Match) {
+    const [, a, b] = ipv4Match.map(Number);
+    if (a === 10) return true;
+    if (a === 127) return true;
+    if (a === 169 && b === 254) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 0) return true;
+  }
+
+  return false;
+}
+
 function sendWebhook(payload) {
   if (!webhookUrl) {
     return;
   }
 
-  axios.post(webhookUrl, payload).catch((error) => {
+  try {
+    const parsed = new URL(webhookUrl);
+    if (!["http:", "https:"].includes(parsed.protocol) || isPrivateOrLoopbackHost(parsed.hostname)) {
+      return;
+    }
+  } catch {
+    return;
+  }
+
+  axios.post(webhookUrl, payload, { timeout: 3000 }).catch((error) => {
     console.warn("Webhook delivery failed:", error.message);
   });
 }
@@ -604,26 +754,154 @@ function getCleanTargetUrl(value) {
   }
 
   if (targetUrl.startsWith("/")) {
+    if (targetUrl.startsWith("//") || targetUrl.startsWith("/\\")) {
+      return "";
+    }
     return targetUrl;
   }
 
   try {
     const parsed = new URL(targetUrl);
-    return ["http:", "https:"].includes(parsed.protocol) ? parsed.toString() : "";
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      return "";
+    }
+    if (isPrivateOrLoopbackHost(parsed.hostname)) {
+      return "";
+    }
+    return parsed.toString();
   } catch {
     return "";
   }
 }
 
-app.use(cors());
+app.disable("x-powered-by");
+if (process.env.TRUST_PROXY !== "0" && process.env.TRUST_PROXY !== "false") {
+  app.set("trust proxy", Number(process.env.TRUST_PROXY) || 1);
+}
+
+const corsOriginConfig = process.env.CORS_ORIGIN || "*";
+const corsOptions = {
+  origin: corsOriginConfig === "*" ? "*" : corsOriginConfig.split(",").map((s) => s.trim()),
+  methods: ["GET", "POST", "OPTIONS", "HEAD"],
+  allowedHeaders: ["Content-Type", "x-api-token", "Authorization"],
+  credentials: true,
+};
+
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://fonts.googleapis.com",
+          "https://cdn.jsdelivr.net",
+        ],
+        fontSrc: [
+          "'self'",
+          "https://fonts.gstatic.com",
+          "https://cdn.jsdelivr.net",
+          "data:",
+        ],
+        imgSrc: ["'self'", "data:", "blob:", "https:"],
+        mediaSrc: ["'self'", "blob:", "https:"],
+        connectSrc: ["'self'", "https:"],
+        objectSrc: ["'none'"],
+        frameAncestors: ["'self'"],
+        upgradeInsecureRequests: null,
+      },
+    },
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginEmbedderPolicy: false,
+    frameguard: { action: "sameorigin" },
+    xContentTypeOptions: true,
+    referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+  })
+);
+
+app.use(
+  compression({
+    threshold: 1024,
+    filter: (req, res) => {
+      if (req.headers["x-no-compression"]) return false;
+      const contentType = res.getHeader("Content-Type") || "";
+      if (
+        /image\/(jpeg|png|webp|gif)|video\/(mp4|webm)|audio\/(mp3|wav|ogg)/.test(
+          String(contentType)
+        )
+      ) {
+        return false;
+      }
+      return compression.filter(req, res);
+    },
+  })
+);
+
+app.use(cors(corsOptions));
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "/"));
-app.use(fileUpload({ createParentPath: true }));
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
-app.use("/assets", express.static("assets"));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+
+app.use(
+  fileUpload({
+    createParentPath: true,
+    limits: { fileSize: MAX_FILE_SIZE_BYTES },
+    abortOnLimit: true,
+    responseOnLimit: "File size exceeds allowed limit",
+  })
+);
+
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: false, limit: "1mb" }));
+
+app.use(
+  express.static(path.join(__dirname, "public"), {
+    maxAge: "1d",
+    etag: true,
+    lastModified: true,
+    setHeaders: (res) => {
+      res.setHeader(
+        "Cache-Control",
+        "public, max-age=86400, stale-while-revalidate=3600"
+      );
+    },
+  })
+);
+
+app.use(
+  "/assets",
+  express.static(path.join(__dirname, "assets"), {
+    maxAge: "7d",
+    etag: true,
+    lastModified: true,
+    setHeaders: (res) => {
+      res.setHeader(
+        "Cache-Control",
+        "public, max-age=604800, stale-while-revalidate=86400, immutable"
+      );
+    },
+  })
+);
+
+function safeTokenCompare(provided, expected) {
+  if (
+    typeof provided !== "string" ||
+    typeof expected !== "string" ||
+    !provided ||
+    !expected
+  ) {
+    return false;
+  }
+  const providedHash = crypto.createHash("sha256").update(provided).digest();
+  const expectedHash = crypto.createHash("sha256").update(expected).digest();
+  return crypto.timingSafeEqual(providedHash, expectedHash);
+}
 
 const authenticate = (req, res, next) => {
   if (!apiToken) {
@@ -632,14 +910,77 @@ const authenticate = (req, res, next) => {
 
   const authorizationHeader = req.headers["x-api-token"];
 
-  if (!authorizationHeader || authorizationHeader !== apiToken) {
+  if (!authorizationHeader || !safeTokenCompare(authorizationHeader, apiToken)) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
   next();
 };
 
-app.get("/", (req, res) => {
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: Number(process.env.RATE_LIMIT_MAX_UPLOADS || 30),
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    if (req.originalUrl.startsWith("/api/")) {
+      return res.status(429).json({
+        ERROR: "Too many uploads from this IP. Please try again later.",
+        code: "RATE_LIMITED",
+      });
+    }
+    return renderHome(req, res, 429, {
+      uploadError:
+        "Too many uploads from this IP. Please wait a few minutes before trying again.",
+      formValues: {
+        customSlug: req.body.customSlug || "",
+        title: req.body.title || "",
+        description: req.body.description || "",
+      },
+    });
+  },
+});
+
+const subscribeLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: Number(process.env.RATE_LIMIT_MAX_SUBSCRIBE || 5),
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    return res
+      .status(429)
+      .send("Too many subscription attempts. Please try again later.");
+  },
+});
+
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: Number(process.env.RATE_LIMIT_MAX_API || 150),
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    return res.status(429).json({
+      ERROR: "Too many requests. Please slow down.",
+      code: "RATE_LIMITED",
+    });
+  },
+});
+
+const publicReadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: Number(process.env.RATE_LIMIT_MAX_PUBLIC || 600),
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    return renderError(req, res, 429, {
+      errorEyebrow: "Rate Limited",
+      errorTitle: "Slow down a bit.",
+      errorMessage: "You have made too many requests recently. Please wait a moment before trying again.",
+    });
+  },
+});
+
+app.get("/", publicReadLimiter, (req, res) => {
   renderHome(req, res);
 
   sendWebhook({
@@ -653,8 +994,14 @@ app.get("/", (req, res) => {
   });
 });
 
-app.post("/subscribe", (req, res) => {
+app.post("/subscribe", subscribeLimiter, (req, res) => {
   const email = cleanText(req.body.email, 180);
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!email || !emailRegex.test(email)) {
+    res.redirect("/?error=invalid_email");
+    return;
+  }
 
   sendWebhook({
     embeds: [
@@ -669,11 +1016,11 @@ app.post("/subscribe", (req, res) => {
   res.redirect("/");
 });
 
-app.get("/upload", (req, res) => {
+app.get("/upload", publicReadLimiter, (req, res) => {
   res.redirect("/#upload");
 });
 
-app.get("/api-docs", (req, res) => {
+app.get("/api-docs", publicReadLimiter, (req, res) => {
   res.status(200).render(
     "views/api_docs",
     buildSharedViewData(req, {
@@ -699,7 +1046,7 @@ app.get("/api-docs", (req, res) => {
   );
 });
 
-app.post("/upload", async (req, res) => {
+app.post("/upload", uploadLimiter, async (req, res) => {
   const uploadedFile = getFirstUploadedFile(req);
   const formValues = {
     customSlug: req.body.customSlug || "",
@@ -710,6 +1057,15 @@ app.post("/upload", async (req, res) => {
   if (!uploadedFile) {
     renderHome(req, res, 400, {
       uploadError: "No file selected. Tiny link. Big preview. We still need the file.",
+      formValues,
+    });
+    return;
+  }
+
+  const validation = validateUploadedFile(uploadedFile);
+  if (!validation.valid) {
+    renderHome(req, res, 400, {
+      uploadError: validation.error,
       formValues,
     });
     return;
@@ -780,11 +1136,17 @@ app.post("/upload", async (req, res) => {
   }
 });
 
-app.post("/api/upload", cors(), authenticate, async (req, res) => {
+app.post("/api/upload", cors(corsOptions), apiLimiter, uploadLimiter, authenticate, async (req, res) => {
   const uploadedFile = getFirstUploadedFile(req);
 
   if (!uploadedFile) {
     res.status(400).json({ ERROR: "No Files Specified" });
+    return;
+  }
+
+  const validation = validateUploadedFile(uploadedFile);
+  if (!validation.valid) {
+    res.status(400).json({ ERROR: validation.error, code: "FILE_INVALID" });
     return;
   }
 
@@ -832,7 +1194,7 @@ app.post("/api/upload", cors(), authenticate, async (req, res) => {
   }
 });
 
-app.post("/api/shorten", cors(), authenticate, async (req, res) => {
+app.post("/api/shorten", cors(corsOptions), apiLimiter, authenticate, async (req, res) => {
   const targetUrl = getCleanTargetUrl(req.body.targetUrl);
 
   if (!targetUrl) {
@@ -872,7 +1234,7 @@ app.post("/api/shorten", cors(), authenticate, async (req, res) => {
   }
 });
 
-app.get("/api/health", (req, res) => {
+app.get("/api/health", apiLimiter, (req, res) => {
   res.status(200).json({
     ok: true,
     service: `${appName} API`,
@@ -880,7 +1242,7 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-app.get("/s/:code", async (req, res) => {
+app.get("/s/:code", publicReadLimiter, async (req, res) => {
   const code = sanitizeSlug(req.params.code);
 
   if (!code || code !== req.params.code) {
@@ -915,7 +1277,7 @@ app.get("/s/:code", async (req, res) => {
   }
 });
 
-app.get("/:code", async (req, res, next) => {
+app.get("/:code", publicReadLimiter, async (req, res, next) => {
   const code = sanitizeSlug(req.params.code);
 
   if (!code || code !== req.params.code || isReservedTopLevelPath(code)) {
@@ -942,12 +1304,17 @@ app.get("/:code", async (req, res, next) => {
   }
 });
 
-app.get("/uploads/*", async (req, res, next) => {
+app.get("/uploads/*", publicReadLimiter, async (req, res, next) => {
   if (!isBlobStorageEnabled()) {
     return next();
   }
 
-  const fileToGet = decodeURIComponent(req.path.slice(9));
+  const rawPath = decodeURIComponent(req.path.slice(9));
+  const fileToGet = path.basename(rawPath);
+
+  if (!isValidFileName(fileToGet) || fileToGet !== rawPath) {
+    return next();
+  }
 
   try {
     const imageDirectLink = await getStoredFileUrl(fileToGet, req);
@@ -962,8 +1329,18 @@ app.get("/uploads/*", async (req, res, next) => {
   }
 });
 
-app.get("/files/*", async (req, res) => {
-  const fileToGet = decodeURIComponent(req.path.slice(7));
+app.get("/files/*", publicReadLimiter, async (req, res) => {
+  const rawPath = decodeURIComponent(req.path.slice(7));
+  const fileToGet = path.basename(rawPath);
+
+  if (!isValidFileName(fileToGet) || fileToGet !== rawPath) {
+    renderError(req, res, 404, {
+      errorEyebrow: "File Not Found",
+      errorTitle: "That file link has no file behind it.",
+      errorMessage: "The asset may have been removed, renamed, or never uploaded.",
+    });
+    return;
+  }
 
   try {
     const imageDirectLink = await getStoredFileUrl(fileToGet, req);
