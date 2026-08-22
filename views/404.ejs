@@ -1,47 +1,92 @@
+<%
+  const safeAppName = (typeof appName === 'string' && appName) ? appName : 'EmbedCDN';
+  const safeFavicon = (typeof appFavicon === 'string' && appFavicon) ? appFavicon : '/assets/logo.ico';
+  const safeStatus = (typeof errorStatus === 'number' && Number.isFinite(errorStatus)) ? errorStatus : 404;
+  const safeEyebrow = (typeof errorEyebrow === 'string' && errorEyebrow) ? errorEyebrow : 'Resource Unavailable';
+  const safeTitle = (typeof errorTitle === 'string' && errorTitle) ? errorTitle : 'Page or File Not Found';
+  const safeMessage = (typeof errorMessage === 'string' && errorMessage) ? errorMessage : 'The requested short link or file could not be found or has expired.';
+%>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <% const safeAppName = typeof appName !== "undefined" && appName ? appName : "EmbedCDN"; %>
-  <% const safeStatus = typeof errorStatus !== "undefined" && errorStatus ? errorStatus : 404; %>
-  <% const safeEyebrow = typeof errorEyebrow !== "undefined" && errorEyebrow ? errorEyebrow : "404 Error"; %>
-  <% const safeTitle = typeof errorTitle !== "undefined" && errorTitle ? errorTitle : "That link is off the map."; %>
-  <% const safeMessage = typeof errorMessage !== "undefined" && errorMessage ? errorMessage : "The file, route, or short link could not be found."; %>
-  <title><%= safeStatus %> | <%= safeAppName %></title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title><%= safeStatus %> &mdash; <%= safeTitle %></title>
+  <meta name="description" content="<%= safeMessage %>">
+
+  <!-- Preconnect & Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link href="/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-  <link href="/assets/css/style.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/x-icon" href="<%= safeFavicon %>">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/assets/vendor/bootstrap-icons/bootstrap-icons.css">
+  <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 
-<body class="product-shell error-page" data-page="error">
+<body>
   <div class="texture-layer" aria-hidden="true"></div>
 
-  <main class="center-stage">
-    <section class="container error-shell">
-      <article class="error-card reveal">
+  <header class="site-header">
+    <div class="container nav-shell">
+      <a class="brand-mark" href="/" aria-label="<%= safeAppName %> Home">
+        <span class="brand-copy">
+          <strong><%= safeAppName %></strong>
+          <small>Fast Media Delivery</small>
+        </span>
+      </a>
+
+      <div class="site-nav-inline">
+        <a class="button button-primary" href="/#upload">
+          <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
+          <span>Upload File</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="center-stage error-shell">
+    <div class="container">
+      <article class="error-card">
         <span class="eyebrow"><%= safeEyebrow %></span>
-        <div class="error-code"><%= safeStatus %></div>
+        <div class="error-code" aria-hidden="true"><%= safeStatus %></div>
         <h1><%= safeTitle %></h1>
         <p><%= safeMessage %></p>
 
         <div class="result-actions">
-          <a href="/" class="button button-primary">
+          <a class="button button-primary" href="/">
             <i class="bi bi-house-door" aria-hidden="true"></i>
-            <span>Go home</span>
+            <span>Return to Home</span>
           </a>
-          <a href="/#upload" class="button button-secondary">
+          <a class="button button-secondary" href="/#upload">
             <i class="bi bi-cloud-arrow-up" aria-hidden="true"></i>
-            <span>Upload file</span>
+            <span>Upload New File</span>
           </a>
         </div>
       </article>
-    </section>
+    </div>
   </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <a class="brand-mark" href="/">
+        <span class="brand-copy">
+          <strong><%= safeAppName %></strong>
+          <small>Upload once. Share everywhere.</small>
+        </span>
+      </a>
+
+      <nav class="site-nav footer-doc-links" aria-label="Footer links">
+        <a href="/">Home</a>
+        <a href="/#upload">Upload</a>
+        <a href="/api-docs">API Docs</a>
+      </nav>
+    </div>
+  </footer>
 
   <script src="/assets/js/main.js"></script>
 </body>
